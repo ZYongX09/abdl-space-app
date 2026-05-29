@@ -1,6 +1,7 @@
 # ABDL Space Android App — AI 开发提示词
 
 > 使用 OpenCode + Xiaomi Mimo-V2.5-Pro 开发
+> 最后更新：2026-05-29
 
 ---
 
@@ -10,129 +11,176 @@
 
 ### 现有项目
 
-| 项目 | 仓库 | 域名 | 技术栈 |
-|------|------|------|--------|
-| 后端 API | `git/abdl-space` (zhx589/abdl-space) | `api.abdl-space.top` | Cloudflare Worker + Hono + D1 |
-| 主站前端 | `abdl-space-v2` (ZYongX09/ABDL-Space-V2) | `abdl-space.top` | React 18 + Vite 5 + Tailwind CSS |
-| 移动端 Web | `abdl-space-mobile` (ZYongX09/abdl-space-mobile) | `m.abdl-space.top` | React 18 + Vite 5 + Tailwind CSS |
-| 开放平台 | `abdl-space-open-platform` (ZYongX09/abdl-space-open-platform) | `open.abdl-space.top` | React 18 + Vite |
-| 图床 | — | `img.abdl-space.top` | Cloudflare ImgBed |
+| 项目 | 本地路径 | GitHub 仓库 | 域名 | 技术栈 |
+|------|---------|-------------|------|--------|
+| 后端 API | `/home/ZYongX/projects/git/abdl-space` | zhx589/abdl-space | `api.abdl-space.top` | Cloudflare Worker + Hono + D1 |
+| 主站前端 | `/home/ZYongX/projects/abdl-space-v2` | ZYongX09/ABDL-Space-V2 | `abdl-space.top` | React 18 + Vite 5 + Tailwind CSS |
+| 移动端 Web | `/home/ZYongX/projects/abdl-space-mobile` | ZYongX09/abdl-space-mobile | `m.abdl-space.top` | React 18 + Vite 5 + Tailwind CSS |
+| 开放平台 | `/home/ZYongX/projects/abdl-space-open-platform` | ZYongX09/abdl-space-open-platform | `open.abdl-space.top` | React 18 + Vite |
+| 图床 | — | — | `img.abdl-space.top` | Cloudflare ImgBed |
 
 ### Android 应用定位
 
 - **仓库名**：`abdl-space-app`（在 GitHub `ZYongX09` 账户下新建）
 - **包名**：`top.abdl.space`
-- **最低 SDK**：API 26 (Android 8.0)
-- **目标 SDK**：API 34 (Android 14)
+- **最低 SDK**：API 26 (Android 8.0) — 覆盖 95%+ 设备
+- **目标 SDK**：API 35 (Android 15) — Google Play 2025 年 8 月起强制要求
+- **编译 SDK**：API 35
 - **技术栈**：Kotlin + Jetpack Compose + Material 3
 
 ---
 
-## 二、核心设计原则
+## 二、设计系统
 
-### 🎨 设计风格：MIUI / HyperOS 风格
+### 主方案：Material 3 Expressive
 
-**不要使用标准 Material Design 3 的默认样式。** 我需要的是类似 MIUI 12 / Xiaomi HyperOS 的设计语言：
+**使用 Google Material 3 Expressive**（2025 年 Google I/O 发布，Jetpack Compose M3 1.5.0+ 支持）。
 
-#### MIUI 12 设计特点
-1. **大圆角卡片**：16-24dp 圆角，轻投影，卡片间留白 12-16dp
-2. **柔和渐变**：背景使用微妙的渐变色（如浅蓝→浅紫），而非纯白
-3. **弹性动画**：
-   - 过渡动画使用 `spring` 物理弹簧（dampingRatio=0.7, stiffness=300）
-   - 列表项入场使用 stagger 动画（依次出现，每项延迟 50ms）
-   - 按钮点击使用缩放弹性（scale 0.95→1.0，带 overshoot）
-   - 页面切换使用 shared element transition + 淡入淡出
-4. **毛玻璃效果**：顶部导航栏和底部导航栏使用模糊背景
-5. **图标风格**：圆润线性图标，2dp 描边，带微动画
-6. **字体层级**：标题用粗体（700），正文用常规（400），次要信息用浅色
-7. **色彩系统**：
-   - 主色：`#4361EE`（明亮蓝紫）
-   - 成功：`#06D6A0`（薄荷绿）
-   - 警告：`#F59E0B`（琥珀）
-   - 错误：`#EF4444`（红色）
-   - 背景：`#F8F9FE`（极浅蓝灰）
-   - 卡片：`#FFFFFF`（白色，带 4dp 圆角投影）
+M3 Expressive 已经大幅改进了动画和表现力，包含：
+- **弹性动画系统**：基于物理的 motion tokens，支持 spring/弹性过渡
+- **新组件**：Button groups、FAB menu、Loading indicator、Split button、Toolbars
+- **35 个新形状** + shape morph 动效
+- **情感化设计**：更好的层级、更丰富的视觉表达
 
-#### 动画规范
+在 Jetpack Compose 中使用 `androidx.compose.material3` 包。
+
+### 补充方案：MIUI/HyperOS 风格动画
+
+如果 M3 Expressive 的动画不够灵动，可以额外实现以下 MIUI 风格动效作为**可选主题**：
+
 ```kotlin
-// 弹簧动画参数
-val SpringSpec = spring<Float>(
-    dampingRatio = 0.7f,  // 弹性阻尼（0=无限弹, 1=无弹）
-    stiffness = 300f       // 刚度（越大越快）
+// MIUI 风格弹簧动画参数
+val MiuiSpringSpec = spring<Float>(
+    dampingRatio = 0.65f,  // 更弹（M3 默认 0.85f）
+    stiffness = 280f
 )
 
-// 列表 stagger 入场
+// 列表 stagger 入场（MIUI 设置页风格）
 items.forEachIndexed { index, item ->
     AnimatedVisibility(
         visible = true,
         enter = fadeIn() + slideInVertically(
-            initialOffsetY = { it / 4 },
-            animationSpec = tween(durationMillis = 300, delayMillis = index * 50)
+            initialOffsetY = { it / 3 },
+            animationSpec = tween(300, delayMillis = index * 40)
         )
     )
 }
 
-// 按钮点击弹性
+// 按钮点击弹性（MIUI 风格）
 val scale by animateFloatAsState(
-    targetValue = if (pressed) 0.95f else 1f,
-    animationSpec = SpringSpec
+    targetValue = if (pressed) 0.93f else 1f,
+    animationSpec = MiuiSpringSpec
 )
 ```
 
-#### 参考实现
-- 主站前端的 CSS 变量：`client/src/styles/global.css`
-- 移动端 Web 的动效：`abdl-space-mobile/src/styles/`
-- 设计灵感：MIUI 12 设置页、HyperOS 通知中心、iOS 音乐 app 的弹性滚动
+### 色彩系统（基于现有 Web 版 CSS 变量）
 
-### 📱 布局规范
-- **底部导航**：5 个 Tab（首页、纸尿裤、广场、消息、我的），使用自定义带动画的底部栏
-- **顶部栏**：大标题模式（标题从大变小的 collapsible effect）
-- **列表**：使用 LazyColumn + stagger 入场动画
-- **详情页**：共享元素过渡（图片、标题）
-- **空状态**：使用 Lottie 动画或自定义 SVG，带引导文案
+```kotlin
+// 浅色主题
+val LightColors = lightColorScheme(
+    primary = Color(0xFF6AAEC8),        // --primary-dark
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFDEEEFF), // --primary-light
+    secondary = Color(0xFFFFB7C5),       // --accent
+    background = Color(0xFFF5F8FC),      // --bg
+    surface = Color.White,               // --bg-card
+    surfaceVariant = Color(0xFFF5F8FC),  // --input-bg
+    error = Color(0xFFE8837C),           // --danger
+    outline = Color(0xFFE8F0F8),         // --border
+    onBackground = Color(0xFF2C3E50),    // --text
+    onSurfaceVariant = Color(0xFF7F8C9B) // --text-light
+)
+
+// 深色主题
+val DarkColors = darkColorScheme(
+    primary = Color(0xFFA8D8F0),
+    onPrimary = Color(0xFF1A1D23),
+    primaryContainer = Color(0xFF2A3F50),
+    secondary = Color(0xFFF5989E),
+    background = Color(0xFF1A1D23),
+    surface = Color(0xFF252830),
+    surfaceVariant = Color(0xFF2A2E35),
+    error = Color(0xFFD35F5A),
+    outline = Color(0xFF383C44),
+    onBackground = Color(0xFFE0E4EA),
+    onSurfaceVariant = Color(0xFF9BA1AC)
+)
+```
+
+### 圆角规范
+
+```kotlin
+val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(10.dp),      // --radius-sm
+    medium = RoundedCornerShape(16.dp),     // --radius
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(32.dp)
+)
+```
 
 ---
 
-## 三、功能规划（分阶段）
+## 三、功能规划
 
 ### Phase 1 — 基础功能（本次开发）
 
-| 模块 | 功能 | API 端点 |
-|------|------|---------|
-| **认证** | 登录（用户名/邮箱+密码） | `POST /api/auth/login` |
-| | 注册 | `POST /api/auth/register` |
-| | 忘记密码 | `POST /api/auth/forgot-password` |
-| | Token 刷新 | `POST /api/auth/refresh` |
-| **纸尿裤** | 列表（分页、筛选、排序） | `GET /api/diapers` |
-| | 详情（尺寸、图片、评分） | `GET /api/diapers/:id` |
-| | 搜索 | `GET /api/search?q=&type=diaper` |
-| **评分** | 提交评分（6 维度） | `POST /api/ratings` |
-| | 查看评分 | `GET /api/ratings/diaper/:id` |
-| **论坛** | 帖子列表 | `GET /api/posts` |
-| | 帖子详情 + 评论 | `GET /api/posts/:id` |
-| | 发帖 | `POST /api/posts` |
-| | 点赞 | `POST /api/likes` |
-| **用户** | 个人主页 | `GET /api/users/:id` |
-| | 编辑资料 | `PUT /api/users/me` |
-| | 关注/取关 | `POST/DELETE /api/follows` |
-| **排行榜** | 综合排行 | `GET /api/rankings` |
-| **通知** | 通知列表 | `GET /api/notifications` |
-| **验证码** | 安全验证（Turnstile + Quantum） | `POST /api/captcha/risk` + `/challenge` + `/verify` |
+| 模块 | 功能 | API 端点 | 对应 Web 页面 |
+|------|------|---------|--------------|
+| **认证** | 登录（用户名/邮箱+密码） | `POST /api/auth/login` | Login.jsx |
+| | 注册 | `POST /api/auth/register` | Register.jsx |
+| | 忘记密码 | `POST /api/auth/forgot-password` | ForgotPassword.jsx |
+| | 获取当前用户 | `GET /api/auth/me` | — |
+| **纸尿裤** | 列表（分页、筛选、排序） | `GET /api/diapers` | Diapers.jsx |
+| | 详情（尺寸、图片、评分） | `GET /api/diapers/:id` | DiaperDetail.jsx |
+| | 品牌列表 | `GET /api/diapers/brands` | — |
+| | 尺寸列表 | `GET /api/diapers/sizes` | — |
+| | 对比 | `GET /api/diapers/compare` | ComparePage.jsx |
+| | 搜索 | `GET /api/search?q=&type=diaper` | — |
+| **评分** | 提交评分（6 维度 1-10） | `POST /api/ratings` | DiaperDetail.jsx |
+| | 查看纸尿裤评分 | `GET /api/diapers/:id/ratings` | DiaperDetail.jsx |
+| | 查看我的评分 | `GET /api/ratings/me/:diaperId` | — |
+| | 删除评分 | `DELETE /api/ratings/:id` | — |
+| **使用感受** | 提交感受（5 维度 -5~5） | `POST /api/feelings` | DiaperDetail.jsx |
+| | 查看感受 | `GET /api/diapers/:id/feelings` | DiaperDetail.jsx |
+| **论坛** | 帖子列表（分页） | `GET /api/posts` | ForumFeed.jsx |
+| | 帖子详情 + 评论 | `GET /api/posts/:id` | PostDetail.jsx |
+| | 发帖 | `POST /api/posts` | CreatePost.jsx |
+| | 删除帖子 | `DELETE /api/posts/:id` | — |
+| | 发评论 | `POST /api/posts/:id/comments` | PostDetail.jsx |
+| | 点赞/取消 | `POST /api/likes` | PostDetail.jsx |
+| **排行榜** | 综合排行 | `GET /api/rankings` | Rankings.jsx |
+| **用户** | 个人主页 | `GET /api/users/:id` | Profile.jsx |
+| | 编辑资料 | `PATCH /api/users/me` | EditProfile.jsx |
+| | 用户帖子 | `GET /api/users/:id/posts` | Profile.jsx |
+| | 用户评分 | `GET /api/users/:id/ratings` | Profile.jsx |
+| | 关注/取关 | `POST/DELETE /api/follows` | Profile.jsx |
+| | 粉丝/关注列表 | `GET /api/follows/:id/followers` | FollowersPage.jsx |
+| **通知** | 通知列表 | `GET /api/notifications` | NotificationsPage.jsx |
+| | 标记已读 | `PATCH /api/notifications/:id` | — |
+| **消息** | 对话列表 | `GET /api/messages/conversations` | MessagesPage.jsx |
+| | 发送消息 | `POST /api/messages` | MessagesPage.jsx |
+| **验证码** | 风险评估 | `POST /api/captcha/risk` | VerifyModal.jsx |
+| | 创建挑战 | `POST /api/captcha/challenge` | VerifyModal.jsx |
+| | Quantum 验证 | `POST /api/captcha/verify` | VerifyModal.jsx |
+| | Turnstile 验证 | `POST /api/captcha/turnstile/verify` | VerifyModal.jsx |
 
-### Phase 2 — 预留位置（UI 先占位）
+### Phase 2 — 预留位置（UI 先占位，功能后期添加）
 
-| 模块 | 预留说明 |
-|------|---------|
-| AI 推荐 | 首页顶部预留 "AI 推荐" 卡片区域 |
-| 私信 | 底部 Tab 已有"消息"，内部暂显示通知 |
-| Wiki | 纸尿裤详情页预留 "Wiki" Tab |
-| 比较 | 纸尿裤列表预留 "比较" 按钮 |
-| 开放平台 | "我的"页面预留"开放平台"入口 |
-| NBW 第三方登录 | 登录页预留 "宝宝新天地登录" 按钮位置 |
+| 模块 | 预留说明 | 对应 Web 页面 |
+|------|---------|--------------|
+| AI 推荐 | 首页顶部预留 "AI 推荐" 卡片区域 | Recommendations.jsx |
+| Wiki | 纸尿裤详情页预留 "Wiki" Tab | TermWiki.jsx |
+| 术语百科 | "我的"页面预留"术语百科"入口 | TermWiki.jsx |
+| 比较 | 纸尿裤列表预留"比较"按钮 | ComparePage.jsx |
+| 开放平台 | "我的"页面预留"开放平台"入口 | — |
+| NBW 第三方登录 | 登录页预留"宝宝新天地登录"按钮位置 | NBWCallback.jsx |
+| OAuth 应用管理 | 设置页预留 | OAuthClientsPage.jsx |
+| 管理后台 | 仅 admin 可见入口 | AdminPage.jsx |
 
 ---
 
-## 四、API 接口信息
+## 四、API 接口详细信息
 
 ### Base URL
 ```
@@ -140,45 +188,62 @@ https://api.abdl-space.top
 ```
 
 ### 认证方式
-- JWT Bearer Token（登录后获取）
-- 请求头：`Authorization: Bearer <token>`
-- Cookie 方式也支持（`credentials: 'include'`）
+```
+Authorization: Bearer <access_token>
+```
+- 登录后获取 access_token（JWT）
+- 支持 Cookie 方式（`credentials: 'include'`）
+- Token 过期后用 refresh_token 刷新
 
-### 响应格式
+### 通用响应格式
 ```json
-// 成功
-{ "data": { ... } }  // 或直接返回对象/数组
+// 成功 — 直接返回数据
+{ "id": 1, "name": "..." }
+
+// 成功 — 列表
+[{ "id": 1 }, { "id": 2 }]
 
 // 错误
 { "error": "错误信息" }
 ```
 
-### 分页格式
-```json
-{
-  "items": [...],
-  "total": 100,
-  "page": 1,
-  "limit": 20
-}
+### 分页参数
 ```
+GET /api/posts?page=1&limit=20
+```
+响应包含 `total`、`page`、`limit` 字段。
 
-### 主要接口详细文档
-参见：`/home/ZYongX/projects/git/abdl-space/API.md`（完整 API 规格，约 1300 行）
+### 完整 API 文档
+参见项目文件：`/home/ZYongX/projects/git/abdl-space/API.md`（约 1365 行，覆盖所有端点的请求/响应格式）
 
 ---
 
 ## 五、数据库表结构（参考）
 
-共 22 张表，核心表：
-- `users` — 用户（id, email, username, avatar, role, bio...）
-- `diapers` — 纸尿裤（id, brand, model, product_type, thickness, absorbency...）
-- `ratings` — 评分（6 维度：absorption/fit/comfort/thickness/appearance/value）
-- `posts` — 论坛帖子
-- `post_comments` — 评论
-- `messages` — 私信
-- `follows` — 关注关系
-- `notifications` — 通知
+共 22 张表：
+
+| 表名 | 说明 | 关键字段 |
+|------|------|---------|
+| `users` | 用户 | id, email, username, avatar, role, bio, age, region |
+| `diapers` | 纸尿裤 | id, brand, model, product_type, thickness, absorbency, is_baby_diaper |
+| `diaper_sizes` | 尺码 | diaper_id, label, waist_min/max, hip_min/max |
+| `ratings` | 评分 | user_id, diaper_id, absorption/fit/comfort/thickness/appearance/value_score |
+| `feelings` | 使用感受 | user_id, diaper_id, size, looseness/softness/dryness/odor_control/quietness |
+| `posts` | 帖子 | id, user_id, content, diaper_id, pinned |
+| `post_comments` | 评论 | id, post_id, user_id, parent_id, content |
+| `likes` | 点赞 | user_id, target_type, target_id |
+| `wiki_pages` | Wiki | id, slug, title, content, author_id, diaper_id |
+| `terms` | 术语 | id, term, abbreviation, definition, category |
+| `messages` | 私信 | id, sender_id, receiver_id, content, read |
+| `follows` | 关注 | follower_id, following_id |
+| `notifications` | 通知 | id, user_id, type, message, related_id, read |
+| `experience` | 经验值 | user_id, current_exp, total_exp, current_level |
+| `captcha_sessions` | 验证码会话 | session_id, type, ip, answer_hash, attempts, used |
+| `email_verifications` | 邮箱验证 | email, code_hash, type, used |
+| `rate_limits` | 限速 | key, count, window_start, expires_at |
+| `ks_channels` | KS 渠道 | id, owner_id, name, base_url, api_key_enc |
+| `ks_sub_keys` | KS 子 Key | id, key_hash, key_prefix, channel_ids, quota_tokens |
+| `ks_usage_logs` | KS 用量 | sub_key_id, channel_id, model, tokens, status |
 
 完整 Schema：`/home/ZYongX/projects/git/abdl-space/schemas/schema.sql`
 
@@ -186,22 +251,28 @@ https://api.abdl-space.top
 
 ## 六、资源文件
 
-### Logo（嵌入 App，不要联网加载）
+### Logo（必须嵌入 App，不要联网加载）
+
+下载后放入 `app/src/main/res/drawable-*` 和 `mipmap-*` 目录：
+
 ```
 网站 icon (SVG)：https://img.abdl-space.top/file/1779879250278_ABDL_icon.svg
 横版 logo (PNG)：https://img.abdl-space.top/file/1779879241082_ABDL.png
 竖版 logo (SVG)：https://img.abdl-space.top/file/1779879267209_ABDL_logo_word.svg
 ```
 
-**要求**：将这些资源下载后放入 `app/src/main/res/` 对应目录（drawable/mipmap），不要在运行时联网加载。
+### 图标
+- 使用 Material Symbols Rounded 图标集（Compose 内置）
+- 自定义图标放入 `res/drawable/` 作为 XML vector drawable
 
 ### 字体
 - 使用系统默认字体（Roboto / Noto Sans CJK）
 - 不要额外下载字体文件
 
-### 图标
-- 使用 Material Symbols Rounded 图标集
-- 关键图标可自定义 SVG 放入 `res/drawable`
+### 图片加载
+- 网络图片（纸尿裤图片、用户头像）使用 **Coil** 库加载
+- Coil 自带内存缓存 + 磁盘缓存
+- App 自身的 Logo/Icon 必须内置，不运行时加载
 
 ---
 
@@ -243,12 +314,11 @@ git add -A && git commit -m "type(scope): description" && git push
 - **CF 账户**：朋友的账户（ZhX589@outlook.com）
 - **后端 Worker**：`abdl-space-api`
 - **D1 数据库**：`abdl-space-db`（ID: 159f81ba-ea32-4667-a3ce-d72cb1659d93）
-- **前端 Pages**：`ABDL-Space-V2`、`abdl-space-mobile`
+- **前端 Pages**：`ABDL-Space-V2`、`abdl-space-mobile`、`abdl-space-open-platform`
 
 ### 部署命令
 ```bash
-# 后端部署（在 git/abdl-space 目录）
-cd /home/ZYongX/projects/git/abdl-space
+# 后端部署（在 /home/ZYongX/projects/git/abdl-space 目录）
 npx wrangler deploy
 
 # D1 查询
@@ -269,85 +339,272 @@ npx wrangler d1 execute abdl-space-db --command "SELECT ..." --remote
 
 ## 九、技术约束
 
-### 必须做到
+### ✅ 必须做到
 1. **纯原生**：使用 Jetpack Compose，不要 WebView 嵌套
-2. **资源内置**：图标、Logo、默认图片全部打入 APK，不联网加载
+2. **资源内置**：图标、Logo、默认图片全部打入 APK，不运行时联网加载
 3. **离线优先**：列表数据本地缓存（Room 数据库），无网络时显示缓存
 4. **流畅动画**：所有页面切换、列表加载、按钮交互都要有动效
 5. **深色模式**：支持 Dark Theme，跟随系统设置
-6. **适配**：支持手机和平板（7 寸以下用手机布局）
+6. **适配**：支持手机和平板（600dp 以上用平板布局）
+7. **错误处理**：所有 API 调用必须有 try-catch，显示用户友好的错误信息
+8. **Token 管理**：使用 EncryptedSharedPreferences 存储，过期自动刷新
 
-### 不要做
+### ❌ 不要做
 1. ❌ 不要用 WebView 嵌套网页
 2. ❌ 不要运行时加载远程图标/Logo
 3. ❌ 不要使用已废弃的 API
 4. ❌ 不要在主线程执行网络请求
 5. ❌ 不要硬编码 API Key（使用 BuildConfig 或 Secrets Manager）
-6. ❌ 不要跳过错误处理（所有 API 调用必须有 try-catch）
+6. ❌ 不要跳过错误处理
+7. ❌ 不要使用过时的 Support Library（用 AndroidX）
 
 ---
 
-## 十、项目结构建议
+## 十、项目结构
 
 ```
 abdl-space-app/
 ├── app/
 │   ├── src/main/
 │   │   ├── java/top/abdl/space/
-│   │   │   ├── App.kt                    # Application 类
+│   │   │   ├── App.kt                    # Application
 │   │   │   ├── MainActivity.kt           # 主 Activity
 │   │   │   ├── navigation/               # 导航图
+│   │   │   │   └── AppNavigation.kt
 │   │   │   ├── ui/
-│   │   │   │   ├── theme/                # 主题（颜色、字体、形状）
-│   │   │   │   ├── components/           # 通用组件（卡片、按钮、输入框）
+│   │   │   │   ├── theme/                # 主题
+│   │   │   │   │   ├── Color.kt
+│   │   │   │   │   ├── Type.kt
+│   │   │   │   │   ├── Shape.kt
+│   │   │   │   │   └── Theme.kt
+│   │   │   │   ├── components/           # 通用组件
+│   │   │   │   │   ├── AppCard.kt
+│   │   │   │   │   ├── AppButton.kt
+│   │   │   │   │   ├── AppTextField.kt
+│   │   │   │   │   ├── LoadingAnimation.kt
+│   │   │   │   │   ├── EmptyState.kt
+│   │   │   │   │   └── ErrorView.kt
 │   │   │   │   ├── home/                 # 首页
 │   │   │   │   ├── diapers/              # 纸尿裤模块
+│   │   │   │   │   ├── DiaperListScreen.kt
+│   │   │   │   │   ├── DiaperDetailScreen.kt
+│   │   │   │   │   └── DiaperViewModel.kt
 │   │   │   │   ├── forum/                # 论坛模块
+│   │   │   │   │   ├── ForumScreen.kt
+│   │   │   │   │   ├── PostDetailScreen.kt
+│   │   │   │   │   ├── CreatePostScreen.kt
+│   │   │   │   │   └── ForumViewModel.kt
 │   │   │   │   ├── auth/                 # 认证模块
+│   │   │   │   │   ├── LoginScreen.kt
+│   │   │   │   │   ├── RegisterScreen.kt
+│   │   │   │   │   └── AuthViewModel.kt
 │   │   │   │   ├── profile/              # 个人中心
+│   │   │   │   │   ├── ProfileScreen.kt
+│   │   │   │   │   ├── EditProfileScreen.kt
+│   │   │   │   │   └── ProfileViewModel.kt
+│   │   │   │   ├── rankings/             # 排行榜
+│   │   │   │   ├── messages/             # 消息
+│   │   │   │   ├── notifications/        # 通知
 │   │   │   │   └── settings/             # 设置
 │   │   │   ├── data/
-│   │   │   │   ├── api/                  # Retrofit API 接口
+│   │   │   │   ├── api/                  # Retrofit API
+│   │   │   │   │   ├── ApiService.kt
+│   │   │   │   │   ├── AuthApi.kt
+│   │   │   │   │   ├── DiaperApi.kt
+│   │   │   │   │   ├── ForumApi.kt
+│   │   │   │   │   └── UserApi.kt
 │   │   │   │   ├── repository/           # 数据仓库
 │   │   │   │   ├── model/                # 数据模型
-│   │   │   │   └── local/                # Room 数据库
+│   │   │   │   ├── local/                # Room 数据库
+│   │   │   │   │   ├── AppDatabase.kt
+│   │   │   │   │   ├── dao/
+│   │   │   │   │   └── entity/
+│   │   │   │   └── datastore/            # Token 存储
 │   │   │   └── util/                     # 工具类
-│   │   └── res/                          # 资源文件
+│   │   │       ├── NetworkUtils.kt
+│   │   │       ├── DateUtils.kt
+│   │   │       └── Extensions.kt
+│   │   └── res/
+│   │       ├── drawable/                 # 图标、Logo
+│   │       ├── mipmap/                   # App 图标
+│   │       ├── values/                   # 字符串、颜色
+│   │       └── font/                     # 字体（如有）
 │   └── build.gradle.kts
 ├── build.gradle.kts
 ├── settings.gradle.kts
+├── gradle.properties
 └── README.md
 ```
 
 ---
 
-## 十一、开发顺序
+## 十一、依赖清单
 
-1. **项目初始化**：创建 Gradle 项目、配置依赖、设置主题
-2. **主题系统**：MIUI 风格的色彩/字体/形状/动画系统
-3. **通用组件**：AppCard、AppButton、AppTextField、LoadingAnimation
-4. **认证模块**：登录 → 注册 → 忘记密码
+```kotlin
+// build.gradle.kts (app)
+dependencies {
+    // Compose BOM
+    val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
+    implementation(composeBom)
+    
+    // Material 3
+    implementation("androidx.compose.material3:material3")
+    
+    // Compose UI
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.animation:animation")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.9.0")
+    
+    // Lifecycle + ViewModel
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")
+    
+    // Retrofit + OkHttp
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    
+    // Room (本地缓存)
+    implementation("androidx.room:room-runtime:2.7.1")
+    implementation("androidx.room:room-ktx:2.7.1")
+    ksp("androidx.room:room-compiler:2.7.1")
+    
+    // Coil (图片加载)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    
+    // DataStore (Token 存储)
+    implementation("androidx.datastore:datastore-preferences:1.1.4")
+    
+    // Accompanist (辅助库)
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+    
+    // Cloudflare Turnstile Android SDK
+    implementation("com.cloudflare:turnstile-android:1.3.0")
+    
+    // Lottie (可选，用于空状态动画)
+    // implementation("com.airbnb.android:lottie-compose:6.6.2")
+}
+```
+
+---
+
+## 十二、开发顺序
+
+1. **项目初始化**：Gradle 项目、依赖配置、主题系统（M3 Expressive 色彩/字体/形状/动画）
+2. **通用组件**：AppCard、AppButton、AppTextField、LoadingAnimation、EmptyState、ErrorView
+3. **网络层**：Retrofit API 接口、Token 拦截器、错误处理
+4. **认证模块**：登录 → 注册 → 忘记密码 → Token 管理
 5. **首页**：Tab 布局 + 纸尿裤推荐卡片 + 预留 AI 区域
-6. **纸尿裤模块**：列表 → 详情 → 评分
-7. **论坛模块**：帖子列表 → 详情 → 发帖
-8. **个人中心**：资料 → 设置 → 通知
-9. **排行榜**
-10. **深色模式适配**
+6. **纸尿裤模块**：列表（分页/筛选/排序）→ 详情 → 评分 → 感受
+7. **论坛模块**：帖子列表 → 详情 → 发帖 → 评论 → 点赞
+8. **个人中心**：资料 → 编辑 → 关注 → 粉丝
+9. **排行榜 + 搜索**
+10. **通知 + 消息**
+11. **深色模式适配 + 平板适配**
 
 ---
 
-## 十二、关键注意事项
+## 十三、关键实现细节
 
-1. **验证码集成**：登录/注册需要调用 `/api/captcha/risk` 判断风险等级，然后根据 `flow` 字段决定使用 Turnstile 或 Quantum 验证。Turnstile 使用 Android SDK（`com.cloudflare:turnstile-android`）。
+### 验证码集成
+```kotlin
+// 1. 先评估风险
+val risk = api.captchaRisk()  // POST /api/captcha/risk
+// 返回 { risk: "low"|"high", flow: "turnstile"|"quantum"|"both" }
 
-2. **图片加载**：使用 Coil 库加载网络图片（纸尿裤图片、用户头像），但 App 本身的 Logo/Icon 必须内置。
+// 2. 根据 flow 决定验证方式
+when (risk.flow) {
+    "turnstile" -> {
+        // 使用 Cloudflare Turnstile Android SDK
+        TurnstileChallenge.init(siteKey).onSuccess { token ->
+            api.verifyTurnstile(sessionId, token)
+        }
+    }
+    "quantum" -> {
+        // 调用 /api/captcha/challenge 获取 Quantum 挑战
+        // 渲染节点序列让用户按顺序点击
+        val challenge = api.createChallenge("quantum")
+        // 用户完成后提交答案
+        api.verifyCaptcha(sessionId, userAnswer)
+    }
+    "both" -> {
+        // 先 Turnstile，再 Quantum
+    }
+}
+```
 
-3. **Token 管理**：登录后保存 access_token 和 refresh_token 到 EncryptedSharedPreferences，过期时自动刷新。
+### Token 管理
+```kotlin
+// 使用 EncryptedSharedPreferences
+val prefs = EncryptedSharedPreferences.create(
+    "auth_prefs",
+    MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+    context,
+    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+)
 
-4. **错误处理**：所有 API 错误统一处理，显示 Toast 或 Snackbar，不要崩溃。
+// OkHttp 拦截器自动附加 Token
+class AuthInterceptor : Interceptor {
+    override fun intercept(chain: Chain): Response {
+        val token = prefs.getString("access_token", null)
+        val request = chain.request().newBuilder()
+            .addHeader("Authorization", "Bearer $token")
+            .build()
+        return chain.proceed(request)
+    }
+}
+```
 
-5. **性能**：列表使用 Paging 3 分页加载，图片使用 Coil 的内存+磁盘缓存。
+### 离线缓存策略
+```kotlin
+// Room 数据库缓存纸尿裤列表
+@Dao
+interface DiaperDao {
+    @Query("SELECT * FROM diapers ORDER BY brand")
+    fun getAll(): Flow<List<DiaperEntity>>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(diapers: List<DiaperEntity>)
+}
+
+// Repository 模式：先返回缓存，后台刷新
+class DiaperRepository(
+    private val api: DiaperApi,
+    private val dao: DiaperDao
+) {
+    fun getDiapers(): Flow<List<Diaper>> = flow {
+        emit(dao.getAll().first().map { it.toDomain() })  // 缓存
+        try {
+            val remote = api.getDiapers()  // 网络
+            dao.insertAll(remote.map { it.toEntity() })  // 更新缓存
+            emit(remote)
+        } catch (e: Exception) {
+            // 网络失败，已有缓存数据
+        }
+    }
+}
+```
 
 ---
 
-*此提示词基于 ABDL Space 项目实际情况编写，最后更新：2026-05-29*
+## 十四、注意事项
+
+1. **不要网页嵌套**：所有页面用 Compose 原生实现，不要用 WebView
+2. **资源内置**：Logo、Icon、默认头像等全部放在 `res/` 目录，APK 打包
+3. **图片加载**：纸尿裤图片、用户头像等网络图片用 Coil（自带缓存）
+4. **动画优先**：页面切换用 `AnimatedNavHost`，列表用 stagger 入场，按钮用弹性动画
+5. **错误统一**：所有 API 错误拦截后显示 Toast/Snackbar，不要崩溃
+6. **分页加载**：论坛帖子、纸尿裤列表使用 Paging 3 库
+7. **验证码**：登录/注册需要先调 `/api/captcha/risk` 判断风险
+8. **深色模式**：主题跟随系统，使用 M3 的 `darkColorScheme` / `lightColorScheme`
+9. **平板适配**：600dp 以上使用 NavigationRail 替代 BottomNavigation
+
+---
+
+*此提示词基于 ABDL Space 项目实际情况编写，扫描了后端（31 路由）、主站前端（34 页面 + 33 组件）、移动端 Web（27 页面 + 29 组件）的完整代码。*
