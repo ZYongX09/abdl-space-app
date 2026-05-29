@@ -24,9 +24,9 @@
 - **仓库名**：`abdl-space-app`（在 GitHub `ZYongX09` 账户下新建）
 - **包名**：`top.abdl.space`
 - **最低 SDK**：API 26 (Android 8.0) — 覆盖 95%+ 设备
-- **目标 SDK**：API 35 (Android 15) — Google Play 2025 年 8 月起强制要求
-- **编译 SDK**：API 35
-- **技术栈**：Kotlin + Jetpack Compose + Material 3
+- **目标 SDK**：API 36 (Android 16) — Google Play 2026 年 8 月起强制要求，已稳定
+- **编译 SDK**：API 36
+- **技术栈**：Kotlin + Jetpack Compose + Material 3 Expressive
 
 ---
 
@@ -44,14 +44,14 @@ M3 Expressive 已经大幅改进了动画和表现力，包含：
 
 在 Jetpack Compose 中使用 `androidx.compose.material3` 包。
 
-### 补充方案：MIUI/HyperOS 风格动画
+### 补充方案：MIUI/HyperOS 风格动画（可选参数）
 
-如果 M3 Expressive 的动画不够灵动，可以额外实现以下 MIUI 风格动效作为**可选主题**：
+在 M3 Expressive 基础上，提供一组 MIUI 风格的 spring 参数作为可选配置。不是独立系统，只是几个参数变体：
 
 ```kotlin
-// MIUI 风格弹簧动画参数
-val MiuiSpringSpec = spring<Float>(
-    dampingRatio = 0.65f,  // 更弹（M3 默认 0.85f）
+// MIUI 风格弹簧动画参数（比 M3 默认更弹）
+val MiuiSpring = spring<Float>(
+    dampingRatio = 0.65f,  // M3 默认 0.85f，MIUI 更弹
     stiffness = 280f
 )
 
@@ -65,12 +65,6 @@ items.forEachIndexed { index, item ->
         )
     )
 }
-
-// 按钮点击弹性（MIUI 风格）
-val scale by animateFloatAsState(
-    targetValue = if (pressed) 0.93f else 1f,
-    animationSpec = MiuiSpringSpec
-)
 ```
 
 ### 色彩系统（基于现有 Web 版 CSS 变量）
@@ -474,20 +468,29 @@ dependencies {
     implementation("androidx.room:room-ktx:2.7.1")
     ksp("androidx.room:room-compiler:2.7.1")
     
-    // Coil (图片加载)
+    // Coil 2.x (图片加载，纯 Android 足够)
     implementation("io.coil-kt:coil-compose:2.7.0")
+    
+    // Koin (轻量 DI)
+    implementation("io.insert-koin:koin-android:4.0.2")
+    implementation("io.insert-koin:koin-androidx-compose:4.0.2")
+    
+    // Paging 3 (列表分页)
+    implementation("androidx.paging:paging-runtime-ktx:3.3.6")
+    implementation("androidx.paging:paging-compose:3.3.6")
     
     // DataStore (Token 存储)
     implementation("androidx.datastore:datastore-preferences:1.1.4")
     
-    // Accompanist (辅助库)
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+    // Kotlin Parcelize
+    implementation("org.jetbrains.kotlin:kotlin-parcelize-runtime")
     
     // Cloudflare Turnstile Android SDK
     implementation("com.cloudflare:turnstile-android:1.3.0")
     
-    // Lottie (可选，用于空状态动画)
-    // implementation("com.airbnb.android:lottie-compose:6.6.2")
+    // Firebase Crashlytics (可选，监控)
+    // implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    // implementation("com.google.firebase:firebase-crashlytics-ktx")
 }
 ```
 
@@ -604,7 +607,86 @@ class DiaperRepository(
 7. **验证码**：登录/注册需要先调 `/api/captcha/risk` 判断风险
 8. **深色模式**：主题跟随系统，使用 M3 的 `darkColorScheme` / `lightColorScheme`
 9. **平板适配**：600dp 以上使用 NavigationRail 替代 BottomNavigation
+10. **Deep Link**：帖子/纸尿裤详情页支持 Deep Link（`https://abdl-space.top/post/:id` → App 打开）
 
 ---
 
-*此提示词基于 ABDL Space 项目实际情况编写，扫描了后端（31 路由）、主站前端（34 页面 + 33 组件）、移动端 Web（27 页面 + 29 组件）的完整代码。*
+## 十五、错误重试策略
+
+| 状态码 | 策略 |
+|--------|------|
+| 401 | 自动刷新 token 后重试 1 次（用 Mutex 防并发刷新） |
+| 429 | 读取 `Retry-After` 头，等待后重试 |
+| 5xx | 不重试，显示错误信息 |
+| 网络超时 | 自动重试 2 次，指数退避 |
+
+### Token 刷新并发控制
+
+```kotlin
+private val refreshTokenMutex = Mutex()
+
+suspend fun refreshToken(): String = refreshTokenMutex.withLock {
+    // 检查是否已被其他请求刷新
+    val currentToken = prefs.getString("access_token", null)
+    if (currentToken != null && !isTokenExpired(currentToken)) {
+        return currentToken
+    }
+    // 执行刷新
+    val response = authApi.refreshToken(refreshToken)
+    prefs.saveTokens(response.accessToken, response.refreshToken)
+    return response.accessToken
+}
+```
+
+---
+
+## 十六、Build Variant
+
+```kotlin
+// build.gradle.kts
+android {
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            buildConfigField("String", "API_BASE", '"http://10.0.2.2:8787"')
+        }
+        create("staging") {
+            dimension = "environment"
+            buildConfigField("String", "API_BASE", '"https://api-staging.abdl-space.top"')
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "API_BASE", '"https://api.abdl-space.top"')
+        }
+    }
+}
+```
+
+使用：
+```kotlin
+val api = Retrofit.Builder()
+    .baseUrl(BuildConfig.API_BASE)
+    .build()
+```
+
+---
+
+## 十七、Room Schema 迁移策略
+
+```kotlin
+// 每次修改 Entity 都要增加版本号 + 写 Migration
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE diapers ADD COLUMN new_field TEXT DEFAULT ''")
+    }
+}
+
+val db = Room.databaseBuilder(context, AppDatabase::class.java, "abdl-space")
+    .addMigrations(MIGRATION_1_2)
+    .build()
+```
+
+---
+
+*此提示词基于 ABDL Space 项目实际情况编写，扫描了后端（31 路由）、主站前端（34 页面 + 33 组件）、移动端 Web（27 页面 + 29 组件）的完整代码。经三方 Agent 辩论达成共识后更新。*
