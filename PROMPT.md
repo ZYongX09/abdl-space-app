@@ -32,6 +32,8 @@
 
 ## 二、设计系统
 
+详细 UI 参考：`MOBILE_UI_REFERENCE.md`（移动端 Web 完整 UI 规范，含色彩/动画/组件/交互模式）
+
 ### 主方案：Material 3 Expressive
 
 **使用 Google Material 3 Expressive**（2025 年 Google I/O 发布）。
