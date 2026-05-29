@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "xiaomi-coding/mimo-v2.5-pro",
+
+  "agents": {
+    "dev": {
+      "system": "Read and follow ./PROMPT.md as your primary development guide. Also read ./MEMORY.md for project context."
+    }
+  }
+}
