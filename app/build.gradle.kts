@@ -34,11 +34,11 @@ android {
     productFlavors {
         create("dev") {
             dimension = "environment"
-            buildConfigField("String", "API_BASE", "\"http://10.0.2.2:8787\"")
+            buildConfigField("String", "API_BASE", "\"https://api.abdl-space.top\"")
         }
         create("staging") {
             dimension = "environment"
-            buildConfigField("String", "API_BASE", "\"http://10.0.2.2:8787\"")
+            buildConfigField("String", "API_BASE", "\"https://api.abdl-space.top\"")
         }
         create("prod") {
             dimension = "environment"

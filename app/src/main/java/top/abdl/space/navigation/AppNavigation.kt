@@ -43,6 +43,7 @@ import top.abdl.space.ui.forum.ForumViewModel
 import top.abdl.space.ui.forum.PostDetailScreen
 import top.abdl.space.ui.home.HomeScreen
 import top.abdl.space.ui.notifications.NotificationScreen
+import top.abdl.space.ui.splash.SplashScreen
 import top.abdl.space.ui.notifications.NotificationViewModel
 import top.abdl.space.ui.profile.EditProfileScreen
 import top.abdl.space.ui.profile.ProfileScreen
@@ -54,6 +55,7 @@ import top.abdl.space.ui.settings.SettingsScreen
 import top.abdl.space.ui.settings.SettingsViewModel
 
 sealed class Screen(val route: String) {
+    data object Splash : Screen("splash")
     data object Home : Screen("home")
     data object Login : Screen("login")
     data object Register : Screen("register")
@@ -141,7 +143,7 @@ fun AppNavigation() {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = startDestination,
+            startDestination = Screen.Splash.route,
             modifier = Modifier.padding(padding),
             enterTransition = {
                 fadeIn(animationSpec = tween(300)) + slideIntoContainer(
@@ -168,6 +170,21 @@ fun AppNavigation() {
                 )
             }
         ) {
+            composable(Screen.Splash.route) {
+                SplashScreen(
+                    onSplashFinished = {
+                        val destination = if (authUiState.isLoggedIn) {
+                            Screen.Home.route
+                        } else {
+                            Screen.Login.route
+                        }
+                        navController.navigate(destination) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             composable(Screen.Login.route) {
                 LoginScreen(
                     viewModel = authViewModel,
