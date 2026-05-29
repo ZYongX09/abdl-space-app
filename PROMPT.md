@@ -34,7 +34,9 @@
 
 ### 主方案：Material 3 Expressive
 
-**使用 Google Material 3 Expressive**（2025 年 Google I/O 发布，Jetpack Compose M3 1.5.0+ 支持）。
+**使用 Google Material 3 Expressive**（2025 年 Google I/O 发布）。
+
+⚠️ **注意**：M3 Expressive 目前（2026.05）仍在 **alpha** 阶段（`material3:1.4.0-alpha`），需要 `@OptIn(ExperimentalMaterial3Api::class)`。如果稳定性优先，可降级到 `material3:1.3.1`（stable）+ 手动补充动画。
 
 M3 Expressive 已经大幅改进了动画和表现力，包含：
 - **弹性动画系统**：基于物理的 motion tokens，支持 spring/弹性过渡
@@ -129,19 +131,22 @@ val AppShapes = Shapes(
 |------|------|----------|
 | **认证** | 登录 | `POST /api/auth/login` |
 | | 注册 | `POST /api/auth/register` |
-| | 忘记密码 | `POST /api/auth/forgot-password` |
+| | 发送邮箱验证码 | `POST /api/auth/send-code` |
+| | 重置密码 | `POST /api/auth/reset-password` |
 | | 获取当前用户 | `GET /api/auth/me` |
 | **动态（Feed）** | 帖子列表（时间线） | `GET /api/posts` |
-| | 发帖（文字 + 图片） | `POST /api/posts` + `POST /api/images/upload` |
+| | 发帖（文字 + 图片） | `POST /api/posts`（图片 URL 拼入 content） |
 | | 帖子详情 + 评论 | `GET /api/posts/:id` |
 | | 发评论 | `POST /api/posts/:id/comments` |
 | | 点赞/取消 | `POST /api/likes` |
 | | 删除帖子 | `DELETE /api/posts/:id` |
 | **用户** | 个人主页 | `GET /api/users/:id` |
 | | 编辑资料 | `PATCH /api/users/me` |
-| | 关注/取关 | `POST/DELETE /api/follows` |
-| | 粉丝/关注列表 | `GET /api/follows/:id/followers` |
-| **搜索** | 搜索帖子和用户 | `GET /api/search` |
+| | 关注/取关 | `POST/DELETE /api/follows/:userId` |
+| | 粉丝列表 | `GET /api/follows/:userId/followers` |
+| | 关注列表 | `GET /api/follows/:userId/following` |
+| **搜索** | 搜索帖子 | `GET /api/posts?search=xxx` |
+| | 搜索纸尿裤 | `GET /api/diapers?search=xxx` |
 | **通知** | 通知列表 + 已读 | `GET /api/notifications` |
 | **纸尿裤评分** | 纸尿裤列表 | `GET /api/diapers` |
 | | 纸尿裤详情 + 评分 | `GET /api/diapers/:id` |
@@ -203,39 +208,44 @@ Authorization: Bearer <access_token>
 ```
 GET /api/posts?page=1&limit=20
 ```
-响应包含 `total`、`page`、`limit` 字段。
+响应格式：
+```json
+{ "pagination": { "page": 1, "limit": 20, "total": 100, "totalPages": 5 } }
+```
+
+### 验证码 API（后端已实现，API.md 未记录）
+
+以下端点在后端代码中已实现，但 API.md 中未记录：
+- `POST /api/captcha/risk` — 风险评估
+- `POST /api/captcha/challenge` — 创建挑战
+- `POST /api/captcha/verify` — Quantum 验证
+- `POST /api/captcha/turnstile/verify` — Turnstile 验证
 
 ### 完整 API 文档
-参见项目文件：`/home/ZYongX/projects/git/abdl-space/API.md`（约 1365 行，覆盖所有端点的请求/响应格式）
+参见项目文件：`/home/ZYongX/projects/git/abdl-space/API.md`（约 1365 行，覆盖主要端点的请求/响应格式）
 
 ---
 
 ## 五、数据库表结构（参考）
 
-共 22 张表：
+共 14 张核心表（另有 9 张扩展表用于消息/验证码/Key Split 等 Phase 2 功能）：
 
 | 表名 | 说明 | 关键字段 |
 |------|------|---------|
-| `users` | 用户 | id, email, username, avatar, role, bio, age, region |
-| `diapers` | 纸尿裤 | id, brand, model, product_type, thickness, absorbency, is_baby_diaper |
+| `users` | 用户 | id, email, username, avatar, role, bio |
+| `diapers` | 纸尿裤 | id, brand, model, product_type, thickness, absorbency |
 | `diaper_sizes` | 尺码 | diaper_id, label, waist_min/max, hip_min/max |
-| `ratings` | 评分 | user_id, diaper_id, absorption/fit/comfort/thickness/appearance/value_score |
-| `feelings` | 使用感受 | user_id, diaper_id, size, looseness/softness/dryness/odor_control/quietness |
-| `posts` | 帖子 | id, user_id, content, diaper_id, pinned |
+| `ratings` | 评分 | user_id, diaper_id, 6 维度评分 |
+| `feelings` | 使用感受 | user_id, diaper_id, 5 维度感受 |
+| `posts` | 帖子 | id, user_id, content, diaper_id |
 | `post_comments` | 评论 | id, post_id, user_id, parent_id, content |
 | `likes` | 点赞 | user_id, target_type, target_id |
-| `wiki_pages` | Wiki | id, slug, title, content, author_id, diaper_id |
-| `terms` | 术语 | id, term, abbreviation, definition, category |
-| `messages` | 私信 | id, sender_id, receiver_id, content, read |
-| `follows` | 关注 | follower_id, following_id |
-| `notifications` | 通知 | id, user_id, type, message, related_id, read |
+| `wiki_pages` | Wiki | id, slug, title, content |
+| `page_versions` | Wiki 版本 | page_id, content, version |
+| `wiki_inline_comments` | Wiki 段评 | page_id, paragraph_hash, content |
+| `terms` | 术语 | id, term, definition, category |
 | `experience` | 经验值 | user_id, current_exp, total_exp, current_level |
-| `captcha_sessions` | 验证码会话 | session_id, type, ip, answer_hash, attempts, used |
-| `email_verifications` | 邮箱验证 | email, code_hash, type, used |
-| `rate_limits` | 限速 | key, count, window_start, expires_at |
-| `ks_channels` | KS 渠道 | id, owner_id, name, base_url, api_key_enc |
-| `ks_sub_keys` | KS 子 Key | id, key_hash, key_prefix, channel_ids, quota_tokens |
-| `ks_usage_logs` | KS 用量 | sub_key_id, channel_id, model, tokens, status |
+| `notifications` | 通知 | id, user_id, type, message, read |
 
 完整 Schema：`/home/ZYongX/projects/git/abdl-space/schemas/schema.sql`
 
@@ -339,7 +349,7 @@ npx wrangler d1 execute abdl-space-db --command "SELECT ..." --remote
 5. **深色模式**：支持 Dark Theme，跟随系统设置
 6. **适配**：支持手机和平板（600dp 以上用平板布局）
 7. **错误处理**：所有 API 调用必须有 try-catch，显示用户友好的错误信息
-8. **Token 管理**：使用 EncryptedSharedPreferences 存储，过期自动刷新
+8. **Token 管理**：使用 EncryptedSharedPreferences 存储（依赖 `androidx.security:security-crypto:1.1.0-alpha06`），token 过期后需重新登录（后端无 refresh_token 机制）
 
 ### ❌ 不要做
 1. ❌ 不要用 WebView 嵌套网页
@@ -436,7 +446,7 @@ abdl-space-app/
 // build.gradle.kts (app)
 dependencies {
     // Compose BOM
-    val composeBom = platform("androidx.compose:compose-bom:2025.05.00")
+    val composeBom = platform("androidx.compose:compose-bom:2026.02.00")
     implementation(composeBom)
     
     // Material 3
@@ -470,8 +480,8 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
     
     // Koin (轻量 DI)
-    implementation("io.insert-koin:koin-android:4.0.2")
-    implementation("io.insert-koin:koin-androidx-compose:4.0.2")
+    implementation("io.insert-koin:koin-android:4.1.1")
+    implementation("io.insert-koin:koin-androidx-compose:4.1.1")
     
     // Paging 3 (列表分页)
     implementation("androidx.paging:paging-runtime-ktx:3.3.6")
@@ -479,6 +489,9 @@ dependencies {
     
     // DataStore (Token 存储)
     implementation("androidx.datastore:datastore-preferences:1.1.4")
+    
+    // Security Crypto (EncryptedSharedPreferences)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
     
     // Kotlin Parcelize
     implementation("org.jetbrains.kotlin:kotlin-parcelize-runtime")
@@ -620,18 +633,16 @@ class DiaperRepository(
 | 5xx | 不重试，显示错误信息 |
 | 网络超时 | 自动重试 2 次，指数退避 |
 
-### Token 刷新并发控制
+### Token 刷新
+
+当前后端不支持 refresh_token，JWT token 过期后需重新登录。如果后续后端支持 refresh_token，可用以下 Mutex 方案处理并发刷新：
 
 ```kotlin
+// 预留：当后端支持 refresh_token 时使用
 private val refreshTokenMutex = Mutex()
-
 suspend fun refreshToken(): String = refreshTokenMutex.withLock {
-    // 检查是否已被其他请求刷新
     val currentToken = prefs.getString("access_token", null)
-    if (currentToken != null && !isTokenExpired(currentToken)) {
-        return currentToken
-    }
-    // 执行刷新
+    if (currentToken != null && !isTokenExpired(currentToken)) return currentToken
     val response = authApi.refreshToken(refreshToken)
     prefs.saveTokens(response.accessToken, response.refreshToken)
     return response.accessToken
@@ -653,7 +664,7 @@ android {
         }
         create("staging") {
             dimension = "environment"
-            buildConfigField("String", "API_BASE", '"https://api-staging.abdl-space.top"')
+            buildConfigField("String", "API_BASE", '"http://10.0.2.2:8787"')  // 本地模拟
         }
         create("prod") {
             dimension = "environment"
