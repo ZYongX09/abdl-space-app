@@ -190,7 +190,7 @@ Authorization: Bearer <access_token>
 ```
 - 登录后获取 access_token（JWT）
 - 支持 Cookie 方式（`credentials: 'include'`）
-- Token 过期后用 refresh_token 刷新
+- Token 过期后需重新登录（当前后端无 refresh_token 机制）
 
 ### 通用响应格式
 ```json
