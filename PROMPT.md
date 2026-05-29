@@ -124,53 +124,92 @@ val AppShapes = Shapes(
 | **认证** | 登录（用户名/邮箱+密码） | `POST /api/auth/login` | Login.jsx |
 | | 注册 | `POST /api/auth/register` | Register.jsx |
 | | 忘记密码 | `POST /api/auth/forgot-password` | ForgotPassword.jsx |
+| | 重置密码 | `POST /api/auth/reset-password` | ForgotPassword.jsx |
+| | 发送邮箱验证码 | `POST /api/auth/send-code` | VerificationInput.jsx |
+| | 绑定/换绑邮箱 | `POST /api/auth/bind-email` | AccountPrivacy.jsx |
 | | 获取当前用户 | `GET /api/auth/me` | — |
 | **纸尿裤** | 列表（分页、筛选、排序） | `GET /api/diapers` | Diapers.jsx |
 | | 详情（尺寸、图片、评分） | `GET /api/diapers/:id` | DiaperDetail.jsx |
 | | 品牌列表 | `GET /api/diapers/brands` | — |
 | | 尺寸列表 | `GET /api/diapers/sizes` | — |
 | | 对比 | `GET /api/diapers/compare` | ComparePage.jsx |
-| | 搜索 | `GET /api/search?q=&type=diaper` | — |
+| | 搜索纸尿裤 | `GET /api/search?q=&type=diaper` | — |
 | **评分** | 提交评分（6 维度 1-10） | `POST /api/ratings` | DiaperDetail.jsx |
 | | 查看纸尿裤评分 | `GET /api/diapers/:id/ratings` | DiaperDetail.jsx |
 | | 查看我的评分 | `GET /api/ratings/me/:diaperId` | — |
 | | 删除评分 | `DELETE /api/ratings/:id` | — |
+| | 基准分参考 | — | BaseScoreRef.jsx |
 | **使用感受** | 提交感受（5 维度 -5~5） | `POST /api/feelings` | DiaperDetail.jsx |
 | | 查看感受 | `GET /api/diapers/:id/feelings` | DiaperDetail.jsx |
 | **论坛** | 帖子列表（分页） | `GET /api/posts` | ForumFeed.jsx |
 | | 帖子详情 + 评论 | `GET /api/posts/:id` | PostDetail.jsx |
-| | 发帖 | `POST /api/posts` | CreatePost.jsx |
+| | 发帖（支持图片） | `POST /api/posts` | CreatePost.jsx |
 | | 删除帖子 | `DELETE /api/posts/:id` | — |
 | | 发评论 | `POST /api/posts/:id/comments` | PostDetail.jsx |
 | | 点赞/取消 | `POST /api/likes` | PostDetail.jsx |
+| | **图片上传** | `POST /api/images/upload` | ImageUploader.jsx |
+| | **图片删除** | `POST /api/images/delete` | — |
 | **排行榜** | 综合排行 | `GET /api/rankings` | Rankings.jsx |
+| **搜索** | 全局搜索 | `GET /api/search?q=&type=all` | — |
+| | 搜索用户 | `GET /api/users/search?q=` | — |
 | **用户** | 个人主页 | `GET /api/users/:id` | Profile.jsx |
+| | **他人主页** | `GET /api/users/:id` | UserPage.jsx |
 | | 编辑资料 | `PATCH /api/users/me` | EditProfile.jsx |
 | | 用户帖子 | `GET /api/users/:id/posts` | Profile.jsx |
 | | 用户评分 | `GET /api/users/:id/ratings` | Profile.jsx |
+| | **用户感受** | `GET /api/users/:id/feelings` | Profile.jsx |
+| | **用户等级** | `GET /api/users/:id/level` | Profile.jsx |
+| | **穿过的纸尿裤** | `GET /api/users/:id/worn` | Profile.jsx |
 | | 关注/取关 | `POST/DELETE /api/follows` | Profile.jsx |
 | | 粉丝/关注列表 | `GET /api/follows/:id/followers` | FollowersPage.jsx |
 | **通知** | 通知列表 | `GET /api/notifications` | NotificationsPage.jsx |
 | | 标记已读 | `PATCH /api/notifications/:id` | — |
+| | **全部已读** | `POST /api/notifications/read-all` | — |
 | **消息** | 对话列表 | `GET /api/messages/conversations` | MessagesPage.jsx |
 | | 发送消息 | `POST /api/messages` | MessagesPage.jsx |
+| | **新建对话** | `POST /api/messages` | NewConversation.jsx |
+| **设置** | 主题切换（浅色/深色/多彩） | — | Settings.jsx |
+| | NSFW 模糊开关 | — | Settings.jsx |
+| **账户** | 账户与隐私管理 | — | AccountPrivacy.jsx |
+| | 修改密码 | `POST /api/admin/reset/password` | AccountPrivacy.jsx |
 | **验证码** | 风险评估 | `POST /api/captcha/risk` | VerifyModal.jsx |
 | | 创建挑战 | `POST /api/captcha/challenge` | VerifyModal.jsx |
 | | Quantum 验证 | `POST /api/captcha/verify` | VerifyModal.jsx |
 | | Turnstile 验证 | `POST /api/captcha/turnstile/verify` | VerifyModal.jsx |
+| **猜你喜欢** | 纯数据推荐（无 AI） | `GET /api/recommend/guess` | Recommendations.jsx |
+| **举报** | 举报帖子/评论 | `POST /api/reports` | ReportModal.jsx |
+| **法律** | 隐私政策 | — | PrivacyPolicy.jsx |
+| | 用户协议 | — | TermsOfService.jsx |
+| | 未成年人保护 | — | MinorProtection.jsx |
+| **其他** | 关于页面（版本/更新日志） | — | About.jsx |
+| | 官方认证徽章 | — | OfficialBadge.jsx |
+| | 富文本渲染（URL 识别） | — | RichContent.jsx |
+| | 图片网格展示 | — | ImageGrid.jsx |
+| | 下拉刷新 | — | PullToRefresh.jsx |
+| | 返回顶部 | — | BackToTop.jsx |
+| | 邮箱验证码输入 | — | VerificationInput.jsx |
 
 ### Phase 2 — 预留位置（UI 先占位，功能后期添加）
 
-| 模块 | 预留说明 | 对应 Web 页面 |
-|------|---------|--------------|
-| AI 推荐 | 首页顶部预留 "AI 推荐" 卡片区域 | Recommendations.jsx |
-| Wiki | 纸尿裤详情页预留 "Wiki" Tab | TermWiki.jsx |
-| 术语百科 | "我的"页面预留"术语百科"入口 | TermWiki.jsx |
-| 比较 | 纸尿裤列表预留"比较"按钮 | ComparePage.jsx |
-| 开放平台 | "我的"页面预留"开放平台"入口 | — |
-| NBW 第三方登录 | 登录页预留"宝宝新天地登录"按钮位置 | NBWCallback.jsx |
-| OAuth 应用管理 | 设置页预留 | OAuthClientsPage.jsx |
-| 管理后台 | 仅 admin 可见入口 | AdminPage.jsx |
+| 模块 | 预留说明 | 对应 Web 页面 | API |
+|------|---------|--------------|-----|
+| AI 推荐 | 首页顶部预留 "AI 推荐" 卡片区域 | Recommendations.jsx | `POST /api/recommend` |
+| NBW 第三方登录 | 登录页预留"宝宝新天地登录"按钮位置 | NBWCallback.jsx | `/api/auth/nbw/*` |
+| NBW 账号绑定 | 账户页预留 NBW 绑定/解绑 | AccountPrivacy.jsx | `/api/auth/nbw/bind` |
+| Wiki/术语百科 | 纸尿裤详情页预留 "Wiki" Tab | TermWiki.jsx | `/api/pages/*`, `/api/terms` |
+| 比较 | 纸尿裤列表预留"比较"按钮 | ComparePage.jsx | `GET /api/diapers/compare` |
+| 等级系统 | 个人主页预留等级展示 | Profile.jsx | `GET /api/users/:id/level` |
+| 私信增强 | 消息页增加新建对话、搜索用户 | MessagesPage.jsx | `/api/messages/*` |
+| 开放平台 | "我的"页面预留"开放平台"入口 | — | `/api/oauth/*` |
+| OAuth 应用管理 | 设置页预留 | OAuthClientsPage.jsx | `/api/oauth/clients` |
+| 多账号切换 | 侧边栏/设置预留 | AccountSwitcher.jsx | — |
+| NSFW 防护 | 设置页预留 NSFW 开关 | NsfwGuard.jsx | — |
+| 举报管理 | 帖子详情页长按菜单 | ReportModal.jsx | `POST /api/reports` |
+| 管理后台 | 仅 admin 可见入口 | AdminPage.jsx | `/api/admin/*` |
+| 滚动进度条 | 帖子详情页顶部 | ScrollProgress.jsx | — |
+| 动画角色 | 登录页装饰 | AnimatedCharacters.jsx | — |
+| 内容 API | 开发者文档入口 | — | `/api/v1/content/*` |
+| Key Split | 开发者文档入口 | — | `/api/key-split/*` |
 
 ---
 
