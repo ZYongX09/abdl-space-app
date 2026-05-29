@@ -1,14 +1,13 @@
 package top.abdl.space.ui.settings
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,9 +21,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,7 +38,7 @@ fun AboutScreen(
                 title = {
                     Text(
                         text = "关于",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -69,23 +65,16 @@ fun AboutScreen(
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            Icon(
-                painter = painterResource(id = R.drawable.ic_logo),
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary
+            // 横版 Logo
+            Image(
+                painter = painterResource(id = R.drawable.logo_horizontal),
+                contentDescription = "ABDL Space Logo",
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(60.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "ABDL Space",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "版本 1.0.0",
@@ -96,7 +85,7 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = "ABDL Space 是一个纸尿裤爱好者社区平台，提供纸尿裤数据库、用户评分、论坛、AI 推荐等功能。",
+                text = "ABDL Space 是一个纸尿裤爱好者社区平台，提供纸尿裤数据库、用户评分、论坛等功能。",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,

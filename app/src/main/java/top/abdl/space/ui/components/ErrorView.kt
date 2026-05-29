@@ -36,10 +36,10 @@ fun ErrorView(
 ) {
     var visible by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (visible) 1f else 0.8f,
+        targetValue = if (visible) 1f else 0.9f,
         animationSpec = spring(
-            dampingRatio = 0.65f,
-            stiffness = 280f
+            dampingRatio = 0.8f,
+            stiffness = 400f
         ),
         label = "error_scale"
     )

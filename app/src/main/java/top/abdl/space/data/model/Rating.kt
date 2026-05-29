@@ -45,9 +45,9 @@ data class CreateRatingRequest(
 )
 
 data class RatingStats(
-    val composite: Double,
-    val count: Int,
-    val dimensions: RatingDimensions
+    val composite: Double = 0.0,
+    val count: Int = 0,
+    val dimensions: RatingDimensions = RatingDimensions()
 )
 
 data class RatingDimensions(
@@ -66,6 +66,6 @@ data class RatingDimensions(
 )
 
 data class DimensionStat(
-    val avg: Double,
-    val count: Int
+    val avg: Double = 0.0,
+    val count: Int = 0
 )

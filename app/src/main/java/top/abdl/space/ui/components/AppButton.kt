@@ -55,10 +55,10 @@ fun AppButton(
     }
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.96f else 1f,
         animationSpec = spring(
-            dampingRatio = 0.65f,
-            stiffness = 280f
+            dampingRatio = 0.8f,
+            stiffness = 400f
         ),
         label = "button_scale"
     )

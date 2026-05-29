@@ -1,10 +1,16 @@
 package top.abdl.space.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -25,8 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -97,7 +104,6 @@ data class BottomNavItem(
     val label: String
 )
 
-// 4 tab：首页 / 发现 / 通知 / 我的
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Home, Icons.Filled.Home, Icons.Outlined.Home, "首页"),
     BottomNavItem(Screen.Diapers, Icons.Filled.Star, Icons.Outlined.StarOutline, "发现"),
@@ -114,7 +120,6 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // 底部栏显示的页面
     val showBottomBar = currentRoute in listOf(
         Screen.Home.route,
         Screen.Diapers.route,
@@ -126,64 +131,68 @@ fun AppNavigation() {
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottomBar) {
-                val borderColor = MaterialTheme.colorScheme.outlineVariant
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier.drawBehind {
-                        drawLine(
-                            color = borderColor,
-                            start = Offset(0f, 0f),
-                            end = Offset(size.width, 0f),
-                            strokeWidth = 0.5.dp.toPx()
-                        )
-                    }
+                // 悬浮药丸底栏
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
-                    bottomNavItems.forEach { item ->
-                        val selected = currentRoute == item.screen.route
-                        NavigationBarItem(
-                            icon = {
-                                Icon(
-                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.label
-                                )
-                            },
-                            label = {
-                                Text(
-                                    text = item.label,
-                                    fontSize = 11.sp
-                                )
-                            },
-                            selected = selected,
-                            onClick = {
-                                if (item.screen == Screen.Profile) {
-                                    // "我的" tab 跳转到当前用户个人主页
-                                    val userId = authUiState.currentUser?.id
-                                    if (userId != null) {
-                                        navController.navigate(Screen.Profile.createRoute(userId)) {
+                    NavigationBar(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(28.dp))
+                            .shadow(
+                                elevation = 8.dp,
+                                shape = RoundedCornerShape(28.dp),
+                                ambientColor = Color.Black.copy(alpha = 0.08f),
+                                spotColor = Color.Black.copy(alpha = 0.12f)
+                            ),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 0.dp
+                    ) {
+                        bottomNavItems.forEach { item ->
+                            val selected = currentRoute == item.screen.route
+                            NavigationBarItem(
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                        contentDescription = item.label
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = item.label,
+                                        fontSize = 10.sp
+                                    )
+                                },
+                                selected = selected,
+                                onClick = {
+                                    if (item.screen == Screen.Profile) {
+                                        val userId = authUiState.currentUser?.id
+                                        if (userId != null) {
+                                            navController.navigate(Screen.Profile.createRoute(userId)) {
+                                                popUpTo(Screen.Home.route) { saveState = true }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        } else {
+                                            navController.navigate(Screen.Login.route)
+                                        }
+                                    } else {
+                                        navController.navigate(item.screen.route) {
                                             popUpTo(Screen.Home.route) { saveState = true }
                                             launchSingleTop = true
                                             restoreState = true
                                         }
-                                    } else {
-                                        navController.navigate(Screen.Login.route)
                                     }
-                                } else {
-                                    navController.navigate(item.screen.route) {
-                                        popUpTo(Screen.Home.route) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -194,31 +203,30 @@ fun AppNavigation() {
             startDestination = Screen.Splash.route,
             modifier = Modifier.padding(padding),
             enterTransition = {
-                fadeIn(animationSpec = tween(280)) + slideIntoContainer(
+                fadeIn(animationSpec = tween(250)) + slideIntoContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                    animationSpec = tween(280)
+                    animationSpec = tween(250)
                 )
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(280)) + slideOutOfContainer(
+                fadeOut(animationSpec = tween(250)) + slideOutOfContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                    animationSpec = tween(280)
+                    animationSpec = tween(250)
                 )
             },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(280)) + slideIntoContainer(
+                fadeIn(animationSpec = tween(250)) + slideIntoContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.End,
-                    animationSpec = tween(280)
+                    animationSpec = tween(250)
                 )
             },
             popExitTransition = {
-                fadeOut(animationSpec = tween(280)) + slideOutOfContainer(
+                fadeOut(animationSpec = tween(250)) + slideOutOfContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.End,
-                    animationSpec = tween(280)
+                    animationSpec = tween(250)
                 )
             }
         ) {
-            // Splash
             composable(Screen.Splash.route) {
                 SplashScreen(
                     onSplashFinished = {
@@ -234,7 +242,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 认证
             composable(Screen.Login.route) {
                 LoginScreen(
                     viewModel = authViewModel,
@@ -272,7 +279,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 首页 — Feed 流
             composable(Screen.Home.route) {
                 val forumViewModel: ForumViewModel = koinViewModel()
                 HomeScreen(
@@ -290,7 +296,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 发帖
             composable(Screen.CreatePost.route) {
                 val forumViewModel: ForumViewModel = koinViewModel()
                 CreatePostScreen(
@@ -300,7 +305,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 帖子详情
             composable(
                 route = Screen.PostDetail.route,
                 arguments = listOf(navArgument("postId") { type = NavType.IntType })
@@ -317,7 +321,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 发现 — 纸尿裤浏览
             composable(Screen.Diapers.route) {
                 val diaperViewModel: DiaperViewModel = koinViewModel()
                 ForumScreen(
@@ -329,7 +332,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 纸尿裤详情
             composable(
                 route = Screen.DiaperDetail.route,
                 arguments = listOf(navArgument("diaperId") { type = NavType.IntType })
@@ -346,7 +348,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 提交评分
             composable(
                 route = Screen.SubmitRating.route,
                 arguments = listOf(navArgument("diaperId") { type = NavType.IntType })
@@ -361,7 +362,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 搜索
             composable(Screen.Search.route) {
                 val searchViewModel: SearchViewModel = koinViewModel()
                 SearchScreen(
@@ -378,7 +378,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 通知
             composable(Screen.Notifications.route) {
                 val notificationViewModel: NotificationViewModel = koinViewModel()
                 NotificationScreen(
@@ -389,7 +388,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 个人主页
             composable(
                 route = Screen.Profile.route,
                 arguments = listOf(navArgument("userId") { type = NavType.IntType })
@@ -409,7 +407,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 编辑资料
             composable(Screen.EditProfile.route) {
                 val profileViewModel: ProfileViewModel = koinViewModel()
                 EditProfileScreen(
@@ -419,7 +416,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 设置
             composable(Screen.Settings.route) {
                 val settingsViewModel: SettingsViewModel = koinViewModel()
                 SettingsScreen(
@@ -431,7 +427,6 @@ fun AppNavigation() {
                 )
             }
 
-            // 关于
             composable(Screen.About.route) {
                 AboutScreen(
                     onNavigateBack = { navController.popBackStack() }
