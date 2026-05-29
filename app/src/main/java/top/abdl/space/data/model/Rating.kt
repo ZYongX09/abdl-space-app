@@ -52,17 +52,17 @@ data class RatingStats(
 
 data class RatingDimensions(
     @SerializedName("absorption_score")
-    val absorptionScore: DimensionStat,
+    val absorptionScore: DimensionStat? = null,
     @SerializedName("fit_score")
-    val fitScore: DimensionStat,
+    val fitScore: DimensionStat? = null,
     @SerializedName("comfort_score")
-    val comfortScore: DimensionStat,
+    val comfortScore: DimensionStat? = null,
     @SerializedName("thickness_score")
-    val thicknessScore: DimensionStat,
+    val thicknessScore: DimensionStat? = null,
     @SerializedName("appearance_score")
-    val appearanceScore: DimensionStat,
+    val appearanceScore: DimensionStat? = null,
     @SerializedName("value_score")
-    val valueScore: DimensionStat
+    val valueScore: DimensionStat? = null
 )
 
 data class DimensionStat(

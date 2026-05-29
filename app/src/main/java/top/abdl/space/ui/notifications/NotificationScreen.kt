@@ -1,5 +1,6 @@
 package top.abdl.space.ui.notifications
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +14,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,6 +32,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,11 +41,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import top.abdl.space.data.model.Notification
 import top.abdl.space.ui.components.EmptyState
 import top.abdl.space.ui.components.ErrorView
+import top.abdl.space.ui.components.StaggerItem
 import top.abdl.space.util.DateUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,15 +75,25 @@ fun NotificationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("通知") },
+                title = {
+                    Text(
+                        text = "通知",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
                     IconButton(onClick = { viewModel.markAllAsRead() }) {
                         Icon(
                             imageVector = Icons.Default.DoneAll,
-                            contentDescription = "全部已读"
+                            contentDescription = "全部已读",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -91,7 +111,7 @@ fun NotificationScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
                 uiState.error != null && uiState.notifications.isEmpty() -> {
@@ -112,14 +132,19 @@ fun NotificationScreen(
                             items = uiState.notifications,
                             key = { it.id }
                         ) { notification ->
-                            NotificationItem(
-                                notification = notification,
-                                onClick = {
-                                    if (!notification.read) {
-                                        viewModel.markAsRead(notification.id)
+                            StaggerItem(
+                                index = uiState.notifications.indexOf(notification),
+                                delayMs = 30
+                            ) {
+                                NotificationItem(
+                                    notification = notification,
+                                    onClick = {
+                                        if (!notification.read) {
+                                            viewModel.markAsRead(notification.id)
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
 
                         if (uiState.hasMore) {
@@ -131,7 +156,9 @@ fun NotificationScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        strokeWidth = 2.dp
                                     )
                                     LaunchedEffect(Unit) {
                                         viewModel.loadMore()
@@ -151,69 +178,96 @@ private fun NotificationItem(
     notification: Notification,
     onClick: () -> Unit
 ) {
-    Card(
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = if (notification.read) {
-                MaterialTheme.colorScheme.surface
-            } else {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            .clickable(onClick = onClick)
+            .drawBehind {
+                drawLine(
+                    color = dividerColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 0.5.dp.toPx()
+                )
             }
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            .background(
+                if (notification.read) {
+                    Color.Transparent
+                } else {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+                }
+            )
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(
+                    if (notification.read) {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    }
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Notifications,
+                imageVector = getNotificationIcon(notification),
                 contentDescription = null,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(20.dp),
                 tint = if (notification.read) {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
                     MaterialTheme.colorScheme.primary
                 }
             )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = notification.message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (notification.read) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = DateUtils.formatRelativeTime(notification.createdAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (notification.read) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "已读",
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = notification.message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (notification.read) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                fontWeight = if (notification.read) FontWeight.Normal else FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = DateUtils.formatRelativeTime(notification.createdAt),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        if (!notification.read) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+        }
+    }
+}
+
+private fun getNotificationIcon(notification: Notification): ImageVector {
+    val msg = notification.message.lowercase()
+    return when {
+        msg.contains("点赞") || msg.contains("like") -> Icons.Default.Favorite
+        msg.contains("关注") || msg.contains("follow") -> Icons.Default.Person
+        else -> Icons.Default.Notifications
     }
 }

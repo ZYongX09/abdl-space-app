@@ -13,14 +13,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,12 +30,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -61,18 +67,26 @@ fun SearchScreen(
                         value = uiState.query,
                         onValueChange = { viewModel.updateQuery(it) },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("搜索...") },
+                        placeholder = {
+                            Text(
+                                "搜索...",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
                         ),
                         trailingIcon = {
                             if (uiState.query.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.clearResults() }) {
                                     Icon(
                                         imageVector = Icons.Default.Clear,
-                                        contentDescription = "清除"
+                                        contentDescription = "清除",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -83,10 +97,14 @@ fun SearchScreen(
                     IconButton(onClick = { viewModel.search() }) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "搜索"
+                            contentDescription = "搜索",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
@@ -104,12 +122,20 @@ fun SearchScreen(
                     selected = uiState.searchType == SearchType.POSTS,
                     onClick = { viewModel.updateSearchType(SearchType.POSTS) },
                     label = { Text("帖子") },
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = 8.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White
+                    )
                 )
                 FilterChip(
                     selected = uiState.searchType == SearchType.DIAPERS,
                     onClick = { viewModel.updateSearchType(SearchType.DIAPERS) },
-                    label = { Text("纸尿裤") }
+                    label = { Text("纸尿裤") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White
+                    )
                 )
             }
 
@@ -119,7 +145,7 @@ fun SearchScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
                 uiState.error != null -> {
@@ -182,44 +208,51 @@ private fun PostSearchItem(
     onClick: () -> Unit,
     onUserClick: () -> Unit
 ) {
-    Card(
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = post.user.avatar,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clickable(onClick = onUserClick)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = post.user.username,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable(onClick = onUserClick)
+            .clickable(onClick = onClick)
+            .drawBehind {
+                drawLine(
+                    color = dividerColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 0.5.dp.toPx()
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = post.user.avatar,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onUserClick)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = post.content,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
+                text = post.user.username,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.clickable(onClick = onUserClick)
             )
         }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = post.content,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -228,35 +261,53 @@ private fun DiaperSearchItem(
     diaper: Diaper,
     onClick: () -> Unit
 ) {
-    Card(
+    val dividerColor = MaterialTheme.colorScheme.outlineVariant
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            .clickable(onClick = onClick)
+            .drawBehind {
+                drawLine(
+                    color = dividerColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 0.5.dp.toPx()
+                )
+            }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${diaper.brand} ${diaper.model}",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
             )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = diaper.productType,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
 
-            if (diaper.avgScore != null) {
-                Spacer(modifier = Modifier.height(4.dp))
+        if (diaper.avgScore != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "评分: ${diaper.avgScore}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
+                    text = String.format("%.1f", diaper.avgScore),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

@@ -39,6 +39,31 @@
 - ✅ 设置（主题切换、关于页）
 - ✅ 深色模式适配
 
+## UI 重设计 (2026-05-30)
+
+用户反馈 opencode 设计的 UI "极为丑陋"，进行了全面重设计：
+
+### 设计风格
+- 参考 Twitter App + 微博 App
+- 不照抄网页端（abdl-space-mobile）
+- 内容优先、简洁克制、减少渐变
+
+### 主要变更
+- 配色系统重写（Primary: #4A9CC7, Secondary: #E8909A）
+- 圆角规范修正（符合 PROMPT.md 规定）
+- 导航从 5 Tab 改为 4 Tab（首页/发现/通知/我的）
+- 首页从 4 宫格改为 Twitter 风格 Feed 流
+- 个人主页改为微博风格（封面+头像半浮）
+- 新增 StaggerItem / ImageGrid / RatingBar 组件
+- 修复 AppButton pressed 状态 bug
+- 修复 SplashScreen 引用不存在 drawable 的 bug
+
+### 设计原则
+- Twitter 风格：Feed 无 Card 包裹，分割线分隔
+- 微博风格：个人主页封面渐变 + 头像半浮
+- MIUI 风格：Stagger 入场动画
+- 克制使用渐变和装饰
+
 ## 待办事项
 
 - [x] 项目编译测试（已完成于 2026-05-30）
@@ -46,6 +71,13 @@
 - [x] 添加 Gradle Wrapper（已完成于 2026-05-30）
 - [x] Git 初始化和首次提交（已完成于 2026-05-30）
 - [x] 创建 GitHub 仓库（已完成于 2026-05-30）
+- [x] UI 全面重设计（已完成于 2026-05-30）
+
+## 踩坑记录
+
+- opencode 生成的 UI 严重偏离设计规范（配色、圆角、组件结构）
+- AppButton 的 pressed 状态用 `mutableStateOf` 设置后不会自动重置
+- SplashScreen 引用了不存在的 `R.drawable.splash_logo`
 
 ## 踩坑记录
 

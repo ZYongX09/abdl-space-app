@@ -5,7 +5,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -36,9 +40,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -48,6 +56,11 @@ import top.abdl.space.ui.components.AppButton
 import top.abdl.space.ui.components.AppTextField
 import top.abdl.space.ui.components.LoadingAnimation
 
+/**
+ * 登录页 — 简洁品牌感
+ * 顶部大 Logo + 品牌名
+ * 表单用卡片包裹
+ */
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
@@ -82,27 +95,54 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 32.dp)
                 .imePadding()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Logo 区 — 品牌色圆形 + 首字母
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "A",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "欢迎回来",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
+                text = "ABDL Space",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "登录你的 ABDL Space 账号",
-                style = MaterialTheme.typography.bodyLarge,
+                text = "登录你的账号",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 4.dp)
             )
 
             Spacer(modifier = Modifier.height(48.dp))
 
+            // 表单区
             AppTextField(
                 value = login,
                 onValueChange = {
@@ -160,17 +200,21 @@ fun LoginScreen(
                 modifier = Modifier.focusRequester(passwordFocusRequester)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // 忘记密码
             TextButton(
                 onClick = onNavigateToForgotPassword,
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text(text = "忘记密码？")
+                Text(
+                    text = "忘记密码？",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // 登录按钮 / Loading
             AnimatedVisibility(
                 visible = uiState.isLoading,
                 enter = fadeIn() + slideInVertically(),
@@ -195,12 +239,15 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
+            // 注册链接
             TextButton(onClick = onNavigateToRegister) {
                 Text(
                     text = "没有账号？立即注册",
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

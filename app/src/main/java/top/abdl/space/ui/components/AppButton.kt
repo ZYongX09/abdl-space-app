@@ -2,6 +2,8 @@ package top.abdl.space.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +15,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.collectLatest
 
 enum class AppButtonType {
     Filled, Tonal, Outlined, Text
@@ -37,9 +41,21 @@ fun AppButton(
     containerColor: Color = Color.Unspecified,
     contentColor: Color = Color.Unspecified
 ) {
-    var pressed by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    var isPressed by remember { mutableStateOf(false) }
+
+    // 正确监听按压状态，自动释放
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collectLatest { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> isPressed = true
+                is PressInteraction.Release, is PressInteraction.Cancel -> isPressed = false
+            }
+        }
+    }
+
     val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(
             dampingRatio = 0.65f,
             stiffness = 280f
@@ -68,13 +84,11 @@ fun AppButton(
     when (type) {
         AppButtonType.Filled -> {
             Button(
-                onClick = {
-                    pressed = true
-                    onClick()
-                },
+                onClick = onClick,
                 modifier = buttonModifier,
                 enabled = enabled,
                 colors = colors,
+                interactionSource = interactionSource,
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
             ) {
                 Text(text = text)
@@ -82,12 +96,10 @@ fun AppButton(
         }
         AppButtonType.Tonal -> {
             FilledTonalButton(
-                onClick = {
-                    pressed = true
-                    onClick()
-                },
+                onClick = onClick,
                 modifier = buttonModifier,
                 enabled = enabled,
+                interactionSource = interactionSource,
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
             ) {
                 Text(text = text)
@@ -95,12 +107,10 @@ fun AppButton(
         }
         AppButtonType.Outlined -> {
             OutlinedButton(
-                onClick = {
-                    pressed = true
-                    onClick()
-                },
+                onClick = onClick,
                 modifier = buttonModifier,
                 enabled = enabled,
+                interactionSource = interactionSource,
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
             ) {
                 Text(text = text)
@@ -108,12 +118,10 @@ fun AppButton(
         }
         AppButtonType.Text -> {
             TextButton(
-                onClick = {
-                    pressed = true
-                    onClick()
-                },
+                onClick = onClick,
                 modifier = buttonModifier,
                 enabled = enabled,
+                interactionSource = interactionSource,
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
             ) {
                 Text(text = text)

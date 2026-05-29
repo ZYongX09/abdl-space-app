@@ -13,17 +13,21 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +38,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import top.abdl.space.data.model.CreateRatingRequest
 import top.abdl.space.ui.components.LoadingAnimation
@@ -88,7 +94,13 @@ fun SubmitRatingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (detailUiState.myRating != null) "修改评分" else "提交评分") },
+                title = {
+                    Text(
+                        text = if (detailUiState.myRating != null) "修改评分" else "提交评分",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -96,7 +108,10 @@ fun SubmitRatingScreen(
                             contentDescription = "返回"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -105,15 +120,15 @@ fun SubmitRatingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
                 text = "请为纸尿裤评分（1-10分）",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 12.dp)
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             RatingSlider(
                 label = "吸收性",
@@ -159,12 +174,23 @@ fun SubmitRatingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                label = { Text("评价（可选）") },
+                label = {
+                    Text(
+                        "评价（可选）",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
                 textStyle = MaterialTheme.typography.bodyLarge,
-                maxLines = 5
+                maxLines = 5,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             if (isSubmitting) {
                 LoadingAnimation()
@@ -185,11 +211,21 @@ fun SubmitRatingScreen(
                             )
                         )
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
                 ) {
-                    Text(if (detailUiState.myRating != null) "更新评分" else "提交评分")
+                    Text(
+                        text = if (detailUiState.myRating != null) "更新评分" else "提交评分",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -203,7 +239,7 @@ private fun RatingSlider(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 6.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -212,11 +248,13 @@ private fun RatingSlider(
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = "${value.toInt()}",
                 style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary
             )
         }
@@ -225,7 +263,12 @@ private fun RatingSlider(
             value = value,
             onValueChange = onValueChange,
             valueRange = 1f..10f,
-            steps = 8
+            steps = 8,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
         )
     }
 }

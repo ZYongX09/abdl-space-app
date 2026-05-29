@@ -5,7 +5,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,15 +15,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Icon
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -38,9 +42,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -96,26 +104,51 @@ fun ForgotPasswordScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 28.dp)
                 .imePadding()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "A",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             Text(
                 text = "重置密码",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
                 text = if (codeSent) "请输入验证码和新密码" else "输入邮箱获取验证码",
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 6.dp)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             AppTextField(
                 value = email,
@@ -125,10 +158,7 @@ fun ForgotPasswordScreen(
                 },
                 label = "邮箱",
                 leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Email,
-                        contentDescription = null
-                    )
+                    Icon(imageVector = Icons.Outlined.Email, contentDescription = null)
                 },
                 isError = emailError != null,
                 errorMessage = emailError,
@@ -153,7 +183,7 @@ fun ForgotPasswordScreen(
             )
 
             if (codeSent) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 AppTextField(
                     value = code,
@@ -163,10 +193,7 @@ fun ForgotPasswordScreen(
                     },
                     label = "验证码",
                     leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Security,
-                            contentDescription = null
-                        )
+                        Icon(imageVector = Icons.Outlined.Security, contentDescription = null)
                     },
                     isError = codeError != null,
                     errorMessage = codeError,
@@ -180,7 +207,7 @@ fun ForgotPasswordScreen(
                     modifier = Modifier.focusRequester(codeFocusRequester)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 AppTextField(
                     value = newPassword,
@@ -190,10 +217,7 @@ fun ForgotPasswordScreen(
                     },
                     label = "新密码",
                     leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Lock,
-                            contentDescription = null
-                        )
+                        Icon(imageVector = Icons.Outlined.Lock, contentDescription = null)
                     },
                     isError = newPasswordError != null,
                     errorMessage = newPasswordError,
@@ -214,7 +238,7 @@ fun ForgotPasswordScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             AnimatedVisibility(
                 visible = uiState.isLoading,
@@ -257,12 +281,14 @@ fun ForgotPasswordScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             TextButton(onClick = onNavigateBack) {
                 Text(
                     text = "返回登录",
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

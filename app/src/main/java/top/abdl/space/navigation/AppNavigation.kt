@@ -9,18 +9,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -34,7 +43,6 @@ import top.abdl.space.ui.auth.ForgotPasswordScreen
 import top.abdl.space.ui.auth.LoginScreen
 import top.abdl.space.ui.auth.RegisterScreen
 import top.abdl.space.ui.diapers.DiaperDetailScreen
-import top.abdl.space.ui.diapers.DiaperListScreen
 import top.abdl.space.ui.diapers.DiaperViewModel
 import top.abdl.space.ui.diapers.SubmitRatingScreen
 import top.abdl.space.ui.forum.CreatePostScreen
@@ -84,16 +92,17 @@ sealed class Screen(val route: String) {
 
 data class BottomNavItem(
     val screen: Screen,
-    val icon: ImageVector,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
     val label: String
 )
 
+// 4 tab：首页 / 发现 / 通知 / 我的
 val bottomNavItems = listOf(
-    BottomNavItem(Screen.Home, Icons.Default.Home, "首页"),
-    BottomNavItem(Screen.Forum, Icons.Default.Search, "动态"),
-    BottomNavItem(Screen.Diapers, Icons.Default.Search, "纸尿裤"),
-    BottomNavItem(Screen.Notifications, Icons.Default.Notifications, "通知"),
-    BottomNavItem(Screen.Settings, Icons.Default.Settings, "设置")
+    BottomNavItem(Screen.Home, Icons.Filled.Home, Icons.Outlined.Home, "首页"),
+    BottomNavItem(Screen.Diapers, Icons.Filled.Star, Icons.Outlined.StarOutline, "发现"),
+    BottomNavItem(Screen.Notifications, Icons.Filled.Notifications, Icons.Outlined.Notifications, "通知"),
+    BottomNavItem(Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person, "我的")
 )
 
 @Composable
@@ -102,39 +111,78 @@ fun AppNavigation() {
     val authViewModel: AuthViewModel = koinViewModel()
     val authUiState by authViewModel.uiState.collectAsState()
 
-    val startDestination = if (authUiState.isLoggedIn) {
-        Screen.Home.route
-    } else {
-        Screen.Login.route
-    }
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // 底部栏显示的页面
     val showBottomBar = currentRoute in listOf(
         Screen.Home.route,
-        Screen.Forum.route,
         Screen.Diapers.route,
         Screen.Notifications.route,
-        Screen.Settings.route
+        Screen.Profile.route
     )
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
+                val borderColor = MaterialTheme.colorScheme.outlineVariant
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.drawBehind {
+                        drawLine(
+                            color = borderColor,
+                            start = Offset(0f, 0f),
+                            end = Offset(size.width, 0f),
+                            strokeWidth = 0.5.dp.toPx()
+                        )
+                    }
+                ) {
                     bottomNavItems.forEach { item ->
+                        val selected = currentRoute == item.screen.route
                         NavigationBarItem(
-                            icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) },
-                            selected = currentRoute == item.screen.route,
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.label
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = item.label,
+                                    fontSize = 11.sp
+                                )
+                            },
+                            selected = selected,
                             onClick = {
-                                navController.navigate(item.screen.route) {
-                                    popUpTo(Screen.Home.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                if (item.screen == Screen.Profile) {
+                                    // "我的" tab 跳转到当前用户个人主页
+                                    val userId = authUiState.currentUser?.id
+                                    if (userId != null) {
+                                        navController.navigate(Screen.Profile.createRoute(userId)) {
+                                            popUpTo(Screen.Home.route) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    } else {
+                                        navController.navigate(Screen.Login.route)
+                                    }
+                                } else {
+                                    navController.navigate(item.screen.route) {
+                                        popUpTo(Screen.Home.route) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                            }
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            )
                         )
                     }
                 }
@@ -146,30 +194,31 @@ fun AppNavigation() {
             startDestination = Screen.Splash.route,
             modifier = Modifier.padding(padding),
             enterTransition = {
-                fadeIn(animationSpec = tween(300)) + slideIntoContainer(
+                fadeIn(animationSpec = tween(280)) + slideIntoContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                    animationSpec = tween(300)
+                    animationSpec = tween(280)
                 )
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(300)) + slideOutOfContainer(
+                fadeOut(animationSpec = tween(280)) + slideOutOfContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                    animationSpec = tween(300)
+                    animationSpec = tween(280)
                 )
             },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(300)) + slideIntoContainer(
+                fadeIn(animationSpec = tween(280)) + slideIntoContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.End,
-                    animationSpec = tween(300)
+                    animationSpec = tween(280)
                 )
             },
             popExitTransition = {
-                fadeOut(animationSpec = tween(300)) + slideOutOfContainer(
+                fadeOut(animationSpec = tween(280)) + slideOutOfContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.End,
-                    animationSpec = tween(300)
+                    animationSpec = tween(280)
                 )
             }
         ) {
+            // Splash
             composable(Screen.Splash.route) {
                 SplashScreen(
                     onSplashFinished = {
@@ -185,6 +234,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 认证
             composable(Screen.Login.route) {
                 LoginScreen(
                     viewModel = authViewModel,
@@ -222,19 +272,17 @@ fun AppNavigation() {
                 )
             }
 
+            // 首页 — Feed 流
             composable(Screen.Home.route) {
-                HomeScreen()
-            }
-
-            composable(Screen.Forum.route) {
                 val forumViewModel: ForumViewModel = koinViewModel()
-                ForumScreen(
-                    viewModel = forumViewModel,
+                HomeScreen(
+                    forumViewModel = forumViewModel,
+                    authViewModel = authViewModel,
+                    onNavigateToSearch = { navController.navigate(Screen.Search.route) },
+                    onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                    onNavigateToCreatePost = { navController.navigate(Screen.CreatePost.route) },
                     onNavigateToPostDetail = { postId ->
                         navController.navigate(Screen.PostDetail.createRoute(postId))
-                    },
-                    onNavigateToCreatePost = {
-                        navController.navigate(Screen.CreatePost.route)
                     },
                     onNavigateToProfile = { userId ->
                         navController.navigate(Screen.Profile.createRoute(userId))
@@ -242,6 +290,17 @@ fun AppNavigation() {
                 )
             }
 
+            // 发帖
+            composable(Screen.CreatePost.route) {
+                val forumViewModel: ForumViewModel = koinViewModel()
+                CreatePostScreen(
+                    viewModel = forumViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onPostCreated = { navController.popBackStack() }
+                )
+            }
+
+            // 帖子详情
             composable(
                 route = Screen.PostDetail.route,
                 arguments = listOf(navArgument("postId") { type = NavType.IntType })
@@ -258,25 +317,19 @@ fun AppNavigation() {
                 )
             }
 
-            composable(Screen.CreatePost.route) {
-                val forumViewModel: ForumViewModel = koinViewModel()
-                CreatePostScreen(
-                    viewModel = forumViewModel,
-                    onNavigateBack = { navController.popBackStack() },
-                    onPostCreated = { navController.popBackStack() }
-                )
-            }
-
+            // 发现 — 纸尿裤浏览
             composable(Screen.Diapers.route) {
                 val diaperViewModel: DiaperViewModel = koinViewModel()
-                DiaperListScreen(
+                ForumScreen(
                     viewModel = diaperViewModel,
-                    onNavigateToDiaperDetail = { diaperId ->
-                        navController.navigate(Screen.DiaperDetail.createRoute(diaperId))
-                    }
+                    onNavigateToDiaperDetail = { id ->
+                        navController.navigate(Screen.DiaperDetail.createRoute(id))
+                    },
+                    onNavigateToSearch = { navController.navigate(Screen.Search.route) }
                 )
             }
 
+            // 纸尿裤详情
             composable(
                 route = Screen.DiaperDetail.route,
                 arguments = listOf(navArgument("diaperId") { type = NavType.IntType })
@@ -293,6 +346,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 提交评分
             composable(
                 route = Screen.SubmitRating.route,
                 arguments = listOf(navArgument("diaperId") { type = NavType.IntType })
@@ -307,6 +361,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 搜索
             composable(Screen.Search.route) {
                 val searchViewModel: SearchViewModel = koinViewModel()
                 SearchScreen(
@@ -323,6 +378,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 通知
             composable(Screen.Notifications.route) {
                 val notificationViewModel: NotificationViewModel = koinViewModel()
                 NotificationScreen(
@@ -333,6 +389,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 个人主页
             composable(
                 route = Screen.Profile.route,
                 arguments = listOf(navArgument("userId") { type = NavType.IntType })
@@ -352,6 +409,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 编辑资料
             composable(Screen.EditProfile.route) {
                 val profileViewModel: ProfileViewModel = koinViewModel()
                 EditProfileScreen(
@@ -361,6 +419,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 设置
             composable(Screen.Settings.route) {
                 val settingsViewModel: SettingsViewModel = koinViewModel()
                 SettingsScreen(
@@ -372,6 +431,7 @@ fun AppNavigation() {
                 )
             }
 
+            // 关于
             composable(Screen.About.route) {
                 AboutScreen(
                     onNavigateBack = { navController.popBackStack() }
