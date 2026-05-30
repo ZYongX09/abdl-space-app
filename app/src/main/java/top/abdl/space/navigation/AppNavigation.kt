@@ -44,6 +44,8 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -204,12 +206,22 @@ fun AppNavigation() {
                             backdrop = contentBackdrop,
                             shape = { barShape },
                             effects = {
-                                blur((12 * blurBudget.inputScale).dp.toPx())
+                                blur((24 * blurBudget.inputScale).dp.toPx())
                                 lens(
-                                    refractionHeight = (2 * blurBudget.inputScale).dp.toPx(),
-                                    refractionAmount = (1 * blurBudget.inputScale).dp.toPx(),
-                                    depthEffect = false,
-                                    chromaticAberration = false
+                                    refractionHeight = (6 * blurBudget.inputScale).dp.toPx(),
+                                    refractionAmount = (4 * blurBudget.inputScale).dp.toPx(),
+                                    depthEffect = true,
+                                    chromaticAberration = true
+                                )
+                            },
+                            highlight = {
+                                Highlight.Default.copy(alpha = 0.15f)
+                            },
+                            innerShadow = {
+                                InnerShadow(
+                                    radius = 4.dp,
+                                    alpha = 0.2f,
+                                    color = Color.White
                                 )
                             },
                             onDrawSurface = { drawRect(surfaceGlassColor) }
@@ -271,27 +283,27 @@ fun AppNavigation() {
                     .hazeSource(hazeState)
                     .layerBackdrop(contentBackdrop),
                 enterTransition = {
-                    fadeIn(animationSpec = tween(250)) + slideIntoContainer(
+                    fadeIn(animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)) + slideIntoContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                        animationSpec = tween(250)
+                        animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)
                     )
                 },
                 exitTransition = {
-                    fadeOut(animationSpec = tween(250)) + slideOutOfContainer(
+                    fadeOut(animationSpec = tween(150)) + slideOutOfContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                        animationSpec = tween(250)
+                        animationSpec = tween(150)
                     )
                 },
                 popEnterTransition = {
-                    fadeIn(animationSpec = tween(250)) + slideIntoContainer(
+                    fadeIn(animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)) + slideIntoContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.End,
-                        animationSpec = tween(250)
+                        animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)
                     )
                 },
                 popExitTransition = {
-                    fadeOut(animationSpec = tween(250)) + slideOutOfContainer(
+                    fadeOut(animationSpec = tween(150)) + slideOutOfContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.End,
-                        animationSpec = tween(250)
+                        animationSpec = tween(150)
                     )
                 }
             ) {

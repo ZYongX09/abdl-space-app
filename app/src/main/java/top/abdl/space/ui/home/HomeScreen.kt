@@ -143,20 +143,22 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            AnimatedVisibility(
-                visible = true,
-                enter = scaleIn(animationSpec = tween(200)) + fadeIn()
-            ) {
-                FloatingActionButton(
-                    onClick = onNavigateToCreatePost,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White,
-                    shape = CircleShape
+            Box(modifier = Modifier.padding(bottom = 80.dp)) {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = scaleIn(animationSpec = tween(200)) + fadeIn()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "发帖"
-                    )
+                    FloatingActionButton(
+                        onClick = onNavigateToCreatePost,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White,
+                        shape = CircleShape
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "发帖"
+                        )
+                    }
                 }
             }
         },
