@@ -56,6 +56,7 @@ import coil.compose.AsyncImage
 import top.abdl.space.data.model.Comment
 import top.abdl.space.data.model.Post
 import top.abdl.space.ui.components.ErrorView
+import top.abdl.space.ui.components.ImageGrid
 import top.abdl.space.ui.components.LoadingAnimation
 import top.abdl.space.ui.components.StaggerItem
 import top.abdl.space.util.DateUtils
@@ -244,6 +245,12 @@ private fun PostContent(
             style = MaterialTheme.typography.bodyLarge,
             lineHeight = 26.sp
         )
+
+        // 图片
+        if (post.images.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            ImageGrid(images = post.images.map { it.imageUrl })
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

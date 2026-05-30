@@ -336,6 +336,14 @@ private fun FeedPostItem(
                     lineHeight = 24.sp
                 )
 
+                // 图片
+                if (post.images.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    ImageGrid(
+                        images = post.images.map { it.imageUrl }
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // 操作栏 — 点赞 + 评论

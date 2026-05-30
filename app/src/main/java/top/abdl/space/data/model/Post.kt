@@ -9,14 +9,25 @@ data class Post(
     @SerializedName("diaper_id")
     val diaperId: Int? = null,
     val pinned: Boolean = false,
+    @SerializedName("repost_id")
+    val repostId: Int? = null,
+    val repost: Post? = null,
     @SerializedName("like_count")
     val likeCount: Int = 0,
     @SerializedName("has_liked")
     val hasLiked: Boolean = false,
     @SerializedName("comment_count")
     val commentCount: Int = 0,
+    val images: List<PostImage> = emptyList(),
     @SerializedName("created_at")
     val createdAt: String
+)
+
+data class PostImage(
+    @SerializedName("image_url")
+    val imageUrl: String,
+    @SerializedName("is_nsfw")
+    val isNsfw: Boolean = false
 )
 
 data class PostDetail(
@@ -36,6 +47,7 @@ data class Comment(
     val likeCount: Int = 0,
     @SerializedName("has_liked")
     val hasLiked: Boolean = false,
+    val images: List<PostImage> = emptyList(),
     @SerializedName("created_at")
     val createdAt: String
 )
@@ -43,13 +55,15 @@ data class Comment(
 data class CreatePostRequest(
     val content: String,
     @SerializedName("diaper_id")
-    val diaperId: Int? = null
+    val diaperId: Int? = null,
+    val images: List<String> = emptyList()
 )
 
 data class CreateCommentRequest(
     val content: String,
     @SerializedName("parent_id")
-    val parentId: Int? = null
+    val parentId: Int? = null,
+    val images: List<String> = emptyList()
 )
 
 data class LikeRequest(

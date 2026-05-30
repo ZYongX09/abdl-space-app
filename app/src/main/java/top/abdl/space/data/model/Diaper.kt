@@ -27,7 +27,8 @@ data class Diaper(
     @SerializedName("rating_count")
     val ratingCount: Int = 0,
     @SerializedName("feeling_count")
-    val feelingCount: Int = 0
+    val feelingCount: Int = 0,
+    val images: List<String> = emptyList()
 )
 
 data class DiaperSize(
