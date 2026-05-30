@@ -45,7 +45,8 @@ class ProfileViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             try {
-                val user = userApi.getUser(userId)
+                val response = userApi.getUser(userId)
+                val user = response.user
                 val currentUserId = tokenManager.getUserId()
                 _uiState.value = _uiState.value.copy(
                     user = user,
@@ -123,8 +124,8 @@ class ProfileViewModel(
     fun updateProfile(request: UpdateProfileRequest) {
         viewModelScope.launch {
             try {
-                val user = userApi.updateProfile(request)
-                _uiState.value = _uiState.value.copy(user = user)
+                val response = userApi.updateProfile(request)
+                _uiState.value = _uiState.value.copy(user = response.user)
                 _events.emit(ProfileEvent.ProfileUpdated)
             } catch (e: Exception) {
                 val message = ErrorHandler.getUserMessage(e)

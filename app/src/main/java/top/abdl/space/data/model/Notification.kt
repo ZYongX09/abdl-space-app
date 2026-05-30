@@ -6,11 +6,11 @@ data class Notification(
     val id: Int,
     @SerializedName("user_id")
     val userId: Int,
-    val type: String,
-    val message: String,
+    val type: String = "",
+    val message: String = "",
     val read: Boolean = false,
     @SerializedName("created_at")
-    val createdAt: String
+    val createdAt: String = ""
 )
 
 data class FollowUser(

@@ -228,8 +228,8 @@ fun HomeScreen(
                             }
                         }
 
-                        // 底部留白给 FAB
-                        item { Spacer(modifier = Modifier.height(80.dp)) }
+                        // 底部留白给 FAB + 悬浮底栏
+                        item { Spacer(modifier = Modifier.height(120.dp)) }
                     }
                 }
             }

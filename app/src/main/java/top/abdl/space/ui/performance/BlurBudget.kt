@@ -52,6 +52,7 @@ fun resolveBlurBudget(
     // MotionTier 降级
     when (motionTier) {
         MotionTier.Reduced -> {
+            // 低端机：关闭实时 blur，但保留液态玻璃静态效果
             maxBlurLevel = 0
             alphaMultiplier *= 0.9f
             allowRealtime = false

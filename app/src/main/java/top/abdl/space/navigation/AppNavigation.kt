@@ -5,8 +5,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -25,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -172,94 +175,97 @@ fun AppNavigation() {
         HazeState(initialBlurEnabled = hazeEnabled)
     }
 
-    // LiquidGlass backdrop — 仅 Normal/Enhanced 且非滚动时启用
+    // LiquidGlass backdrop — 所有设备启用，低端机用降级参数
     val contentBackdrop = rememberLayerBackdrop()
-    val liquidGlassEnabled = blurBudget.allowRealtime && motionTier != MotionTier.Reduced
+    val liquidGlassEnabled = motionTier != MotionTier.Reduced || !isScrolling
 
     val surfaceGlassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
     val barShape = remember { RoundedCornerShape(28.dp) }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            if (showBottomBar) {
-                Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-                    val barModifier = Modifier
-                        .let { mod ->
-                            // Haze 毛玻璃 — 仅 blur 预算允许时
-                            if (blurBudget.maxBlurLevel > 0) {
-                                mod.hazeEffect(hazeState, HazeMaterials.ultraThin())
-                            } else {
-                                mod
-                            }
-                        }
-                        .let { mod ->
-                            // LiquidGlass — 仅允许实时 blur 时
-                            if (liquidGlassEnabled) {
-                                mod.drawBackdrop(
-                                    backdrop = contentBackdrop,
-                                    shape = { barShape },
-                                    effects = {
-                                        blur((20 * blurBudget.inputScale).dp.toPx())
-                                        lens(
-                                            refractionHeight = (4 * blurBudget.inputScale).dp.toPx(),
-                                            refractionAmount = (2 * blurBudget.inputScale).dp.toPx(),
-                                            depthEffect = true,
-                                            chromaticAberration = false
-                                        )
-                                    },
-                                    onDrawSurface = { drawRect(surfaceGlassColor) }
+    // 底部导航栏组件
+    @Composable
+    fun BottomBarOverlay() {
+        if (!showBottomBar) return
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            val barModifier = Modifier
+                .let { mod ->
+                    if (blurBudget.maxBlurLevel > 0 && !isScrolling) {
+                        mod.hazeEffect(hazeState, HazeMaterials.ultraThin())
+                    } else mod
+                }
+                .let { mod ->
+                    if (liquidGlassEnabled) {
+                        mod.drawBackdrop(
+                            backdrop = contentBackdrop,
+                            shape = { barShape },
+                            effects = {
+                                blur((12 * blurBudget.inputScale).dp.toPx())
+                                lens(
+                                    refractionHeight = (2 * blurBudget.inputScale).dp.toPx(),
+                                    refractionAmount = (1 * blurBudget.inputScale).dp.toPx(),
+                                    depthEffect = false,
+                                    chromaticAberration = false
                                 )
-                            } else {
-                                mod
-                            }
-                        }
+                            },
+                            onDrawSurface = { drawRect(surfaceGlassColor) }
+                        )
+                    } else mod
+                }
 
-                    MiuixNavigationBar(
-                        modifier = barModifier,
-                        color = Color.Transparent,
-                        showDivider = false,
-                        defaultWindowInsetsPadding = false,
-                        mode = NavigationBarDisplayMode.IconAndText
-                    ) {
-                        bottomNavItems.forEach { item ->
-                            val selected = currentRoute == item.screen.route
-                            MiuixNavigationBarItem(
-                                selected = selected,
-                                onClick = {
-                                    if (item.screen == Screen.Profile) {
-                                        val userId = authUiState.currentUser?.id
-                                        if (userId != null) {
-                                            navController.navigate(Screen.Profile.createRoute(userId)) {
-                                                popUpTo(Screen.Home.route) { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        } else {
-                                            navController.navigate(Screen.Login.route)
-                                        }
-                                    } else {
-                                        navController.navigate(item.screen.route) {
-                                            popUpTo(Screen.Home.route) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
+            MiuixNavigationBar(
+                modifier = barModifier
+                    .clip(barShape)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)),
+                color = Color.Transparent,
+                showDivider = false,
+                defaultWindowInsetsPadding = false,
+                mode = NavigationBarDisplayMode.IconAndText
+            ) {
+                bottomNavItems.forEach { item ->
+                    val selected = currentRoute == item.screen.route
+                    MiuixNavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            if (item.screen == Screen.Profile) {
+                                val userId = authUiState.currentUser?.id
+                                if (userId != null) {
+                                    navController.navigate(Screen.Profile.createRoute(userId)) {
+                                        popUpTo(Screen.Home.route) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                },
-                                icon = if (selected) item.selectedIcon else item.unselectedIcon,
-                                label = item.label
-                            )
-                        }
-                    }
+                                } else navController.navigate(Screen.Login.route)
+                            } else {
+                                navController.navigate(item.screen.route) {
+                                    popUpTo(Screen.Home.route) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        },
+                        icon = if (selected) item.selectedIcon else item.unselectedIcon,
+                        label = item.label
+                    )
                 }
             }
         }
+    }
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
             NavHost(
                 navController = navController,
                 startDestination = Screen.Splash.route,
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(padding)
                     .hazeSource(hazeState)
                     .layerBackdrop(contentBackdrop),
@@ -359,7 +365,8 @@ fun AppNavigation() {
                     ProfileScreen(koinViewModel(), it.arguments?.getInt("userId") ?: return@composable,
                         { navController.popBackStack() },
                         { navController.navigate(Screen.EditProfile.route) },
-                        { navController.navigate(Screen.Profile.createRoute(it)) }
+                        { navController.navigate(Screen.Profile.createRoute(it)) },
+                        { navController.navigate(Screen.Settings.route) }
                     )
                 }
                 composable(Screen.EditProfile.route) {
@@ -382,6 +389,9 @@ fun AppNavigation() {
                     AboutScreen { navController.popBackStack() }
                 }
             }
+
+            // 底栏浮层 — 浮在内容之上
+            BottomBarOverlay()
         }
     }
 }

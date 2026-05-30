@@ -14,10 +14,10 @@ import top.abdl.space.data.model.UserFull
 
 interface UserApi {
     @GET("/api/users/{id}")
-    suspend fun getUser(@Path("id") id: Int): UserFull
+    suspend fun getUser(@Path("id") id: Int): UserResponse
 
     @PATCH("/api/users/me")
-    suspend fun updateProfile(@Body request: UpdateProfileRequest): UserFull
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): UserResponse
 
     @POST("/api/follows/{userId}")
     suspend fun followUser(@Path("userId") userId: Int): Map<String, String>
@@ -43,4 +43,8 @@ interface UserApi {
 data class FollowListResponse(
     val users: List<FollowUser>,
     val pagination: Pagination
+)
+
+data class UserResponse(
+    val user: UserFull
 )

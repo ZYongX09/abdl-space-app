@@ -164,16 +164,11 @@ fun PostDetailScreen(
                                 items = detail.comments,
                                 key = { it.id }
                             ) { comment ->
-                                StaggerItem(
-                                    index = detail.comments.indexOf(comment),
-                                    delayMs = 30
-                                ) {
-                                    CommentItem(
-                                        comment = comment,
-                                        onUserClick = { onNavigateToProfile(comment.user.id) },
-                                        onLikeClick = { viewModel.toggleLike("comment", comment.id) }
-                                    )
-                                }
+                                CommentItem(
+                                    comment = comment,
+                                    onUserClick = { onNavigateToProfile(comment.user.id) },
+                                    onLikeClick = { viewModel.toggleLike("comment", comment.id) }
+                                )
                             }
                         }
                     }

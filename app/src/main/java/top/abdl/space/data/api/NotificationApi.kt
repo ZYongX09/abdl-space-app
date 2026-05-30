@@ -4,6 +4,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import com.google.gson.annotations.SerializedName
 import top.abdl.space.data.model.Notification
 import top.abdl.space.data.model.Pagination
 
@@ -23,5 +24,7 @@ interface NotificationApi {
 
 data class NotificationListResponse(
     val notifications: List<Notification>,
-    val pagination: Pagination
+    val pagination: Pagination? = null,
+    @SerializedName("unread_count")
+    val unreadCount: Int = 0
 )

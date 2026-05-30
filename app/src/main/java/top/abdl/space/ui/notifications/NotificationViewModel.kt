@@ -57,12 +57,13 @@ class NotificationViewModel(
                 } else {
                     _uiState.value.notifications + response.notifications
                 }
+                val hasMorePages = response.pagination?.let { page < it.totalPages } ?: false
                 _uiState.value = _uiState.value.copy(
                     notifications = newNotifications,
                     isLoading = false,
                     isRefreshing = false,
                     currentPage = page + 1,
-                    hasMore = page < response.pagination.totalPages
+                    hasMore = hasMorePages
                 )
             } catch (e: Exception) {
                 val message = ErrorHandler.getUserMessage(e)

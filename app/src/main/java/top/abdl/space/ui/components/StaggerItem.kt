@@ -12,13 +12,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
 /**
- * Stagger 入场动画 — 轻量版（低端机友好）
- * 仅使用 fadeIn，不使用 slideInVertically 减少 GPU 负担
+ * Stagger 入场动画 — 极轻量版
+ * 仅 fadeIn，无位移，最小化 GPU 负担
  */
 @Composable
 fun StaggerItem(
     index: Int,
-    delayMs: Int = 30,
+    delayMs: Int = 25,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -32,7 +32,7 @@ fun StaggerItem(
         visible = visible,
         enter = fadeIn(
             animationSpec = tween(
-                durationMillis = 200,
+                durationMillis = 150,
                 delayMillis = index * delayMs
             )
         ),

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,7 +70,8 @@ fun ProfileScreen(
     userId: Int,
     onNavigateBack: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
-    onNavigateToProfile: (Int) -> Unit
+    onNavigateToProfile: (Int) -> Unit,
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -112,6 +114,13 @@ fun ProfileScreen(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "编辑资料",
                                 tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "设置",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -181,7 +190,7 @@ fun ProfileScreen(
                         item {
                             StaggerItem(index = 2) {
                                 Text(
-                                    text = user.bio,
+                                    text = user.bio ?: "",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
@@ -291,7 +300,7 @@ private fun ProfileHeader(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = user.username,
+                    text = user.username ?: "",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -309,7 +318,7 @@ private fun ProfileHeader(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = user.region,
+                            text = user.region ?: "",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -426,7 +435,7 @@ private fun FollowUserItem(
         Spacer(modifier = Modifier.width(14.dp))
 
         Text(
-            text = user.username,
+            text = user.username ?: "",
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Medium
         )

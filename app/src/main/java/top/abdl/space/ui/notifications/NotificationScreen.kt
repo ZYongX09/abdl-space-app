@@ -233,7 +233,7 @@ private fun NotificationItem(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = notification.message,
+                text = notification.message ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (notification.read) {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -264,7 +264,7 @@ private fun NotificationItem(
 }
 
 private fun getNotificationIcon(notification: Notification): ImageVector {
-    val msg = notification.message.lowercase()
+    val msg = notification.message?.lowercase() ?: ""
     return when {
         msg.contains("点赞") || msg.contains("like") -> Icons.Default.Favorite
         msg.contains("关注") || msg.contains("follow") -> Icons.Default.Person
