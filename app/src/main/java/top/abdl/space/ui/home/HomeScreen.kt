@@ -89,12 +89,18 @@ fun HomeScreen(
     onNavigateToNotifications: () -> Unit = {},
     onNavigateToCreatePost: () -> Unit = {},
     onNavigateToPostDetail: (Int) -> Unit = {},
-    onNavigateToProfile: (Int) -> Unit = {}
+    onNavigateToProfile: (Int) -> Unit = {},
+    onScrollStateChanged: (Boolean) -> Unit = {}
 ) {
     val uiState by forumViewModel.uiState.collectAsState()
     val authUiState by authViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
+
+    // 通知导航栏滚动状态
+    LaunchedEffect(listState.isScrollInProgress) {
+        onScrollStateChanged(listState.isScrollInProgress)
+    }
 
     LaunchedEffect(Unit) {
         forumViewModel.events.collect { event ->

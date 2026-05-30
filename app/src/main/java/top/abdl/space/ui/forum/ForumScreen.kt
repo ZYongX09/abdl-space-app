@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import top.abdl.space.data.model.Diaper
+import top.abdl.space.ui.components.DiaperShimmerItem
 import top.abdl.space.ui.components.EmptyState
 import top.abdl.space.ui.components.ErrorView
 import top.abdl.space.ui.components.RatingBar
@@ -167,11 +168,15 @@ fun ForumScreen(
             ) {
                 when {
                     uiState.isLoading && uiState.diapers.isEmpty() -> {
-                        Box(
+                        Column(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            repeat(5) {
+                                DiaperShimmerItem(
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                            }
                         }
                     }
                     uiState.error != null && uiState.diapers.isEmpty() -> {

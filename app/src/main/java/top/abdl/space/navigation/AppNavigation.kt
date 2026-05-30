@@ -22,7 +22,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -34,7 +36,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.drawBackdrop
@@ -71,6 +72,14 @@ import top.abdl.space.ui.settings.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.NavigationBar as MiuixNavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
 import top.yukonga.miuix.kmp.basic.NavigationBarItem as MiuixNavigationBarItem
+// 性能优化
+import top.abdl.space.ui.performance.BlurBudget
+import top.abdl.space.ui.performance.BlurSurfaceType
+import top.abdl.space.ui.performance.MotionTier
+import top.abdl.space.ui.performance.rememberAppBackgroundState
+import top.abdl.space.ui.performance.rememberMotionTier
+import top.abdl.space.ui.performance.rememberScrollingState
+import top.abdl.space.ui.performance.resolveBlurBudget
 
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
@@ -114,6 +123,14 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person, "我的")
 )
 
+/**
+ * 全局滚动状态 — HomeScreen 通过这个回调通知导航栏
+ */
+object GlobalScrollState {
+    var isScrolling: Boolean = false
+        internal set
+}
+
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -130,11 +147,31 @@ fun AppNavigation() {
         Screen.Profile.route
     )
 
-    // Haze 毛玻璃状态
-    val hazeState = remember { HazeState() }
-    // AndroidLiquidGlass — 液态玻璃 backdrop
+    // ─── 性能优化：MotionTier + BlurBudget ───
+    val motionTier = rememberMotionTier()
+    val isInBackground = rememberAppBackgroundState()
+
+    // 滚动状态追踪
+    var isFeedScrolling by remember { mutableStateOf(false) }
+    val isScrolling = rememberScrollingState(isFeedScrolling)
+
+    // 底栏 blur 预算
+    val blurBudget = resolveBlurBudget(
+        surfaceType = BlurSurfaceType.BOTTOM_BAR,
+        motionTier = motionTier,
+        isScrolling = isScrolling
+    )
+
+    // HazeState — 后台时禁用节省内存
+    val hazeEnabled = !isInBackground && motionTier != MotionTier.Reduced
+    val hazeState = remember(hazeEnabled) {
+        HazeState(initialBlurEnabled = hazeEnabled)
+    }
+
+    // LiquidGlass backdrop — 仅 Normal/Enhanced 且非滚动时启用
     val contentBackdrop = rememberLayerBackdrop()
-    // 缓存颜色（避免在非 Composable lambda 中访问 MaterialTheme）
+    val liquidGlassEnabled = blurBudget.allowRealtime && motionTier != MotionTier.Reduced
+
     val surfaceGlassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
     val barShape = remember { RoundedCornerShape(28.dp) }
 
@@ -143,26 +180,39 @@ fun AppNavigation() {
         bottomBar = {
             if (showBottomBar) {
                 Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-                    // Miuix NavigationBar + Haze 毛玻璃 + 液态玻璃
+                    val barModifier = Modifier
+                        .let { mod ->
+                            // Haze 毛玻璃 — 仅 blur 预算允许时
+                            if (blurBudget.maxBlurLevel > 0) {
+                                mod.hazeEffect(hazeState, HazeMaterials.ultraThin())
+                            } else {
+                                mod
+                            }
+                        }
+                        .let { mod ->
+                            // LiquidGlass — 仅允许实时 blur 时
+                            if (liquidGlassEnabled) {
+                                mod.drawBackdrop(
+                                    backdrop = contentBackdrop,
+                                    shape = { barShape },
+                                    effects = {
+                                        blur((20 * blurBudget.inputScale).dp.toPx())
+                                        lens(
+                                            refractionHeight = (4 * blurBudget.inputScale).dp.toPx(),
+                                            refractionAmount = (2 * blurBudget.inputScale).dp.toPx(),
+                                            depthEffect = true,
+                                            chromaticAberration = false
+                                        )
+                                    },
+                                    onDrawSurface = { drawRect(surfaceGlassColor) }
+                                )
+                            } else {
+                                mod
+                            }
+                        }
+
                     MiuixNavigationBar(
-                        modifier = Modifier
-                            .hazeEffect(hazeState, HazeMaterials.ultraThin())
-                            .drawBackdrop(
-                                backdrop = contentBackdrop,
-                                shape = { barShape },
-                                effects = {
-                                    blur(20.dp.toPx())
-                                    lens(
-                                        refractionHeight = 4.dp.toPx(),
-                                        refractionAmount = 2.dp.toPx(),
-                                        depthEffect = true,
-                                        chromaticAberration = false
-                                    )
-                                },
-                                onDrawSurface = {
-                                    drawRect(surfaceGlassColor)
-                                }
-                            ),
+                        modifier = barModifier,
                         color = Color.Transparent,
                         showDivider = false,
                         defaultWindowInsetsPadding = false,
@@ -263,7 +313,8 @@ fun AppNavigation() {
                         { navController.navigate(Screen.Notifications.route) },
                         { navController.navigate(Screen.CreatePost.route) },
                         { navController.navigate(Screen.PostDetail.createRoute(it)) },
-                        { navController.navigate(Screen.Profile.createRoute(it)) }
+                        { navController.navigate(Screen.Profile.createRoute(it)) },
+                        onScrollStateChanged = { isFeedScrolling = it }
                     )
                 }
                 composable(Screen.CreatePost.route) {
