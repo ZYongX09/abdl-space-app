@@ -48,7 +48,10 @@ fun CreatePostScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is ForumEvent.PostCreated -> onPostCreated()
+                is ForumEvent.PostCreated -> {
+                    isPosting = false
+                    onPostCreated()
+                }
                 is ForumEvent.Error -> {
                     isPosting = false
                     snackbarHostState.showSnackbar(event.message)

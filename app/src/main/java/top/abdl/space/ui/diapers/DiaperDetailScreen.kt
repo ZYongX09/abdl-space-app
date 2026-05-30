@@ -175,7 +175,7 @@ fun DiaperDetailScreen(
                             )
                         }
 
-                        items(detail.reviews) { rating ->
+                        items(detail.reviews, key = { it.id }) { rating ->
                             RatingItem(rating = rating)
                         }
                     }

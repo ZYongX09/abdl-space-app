@@ -327,19 +327,25 @@ private fun ProfileHeader(
                         Text("编辑资料")
                     }
                 } else {
-                    Button(
-                        onClick = onFollowClick,
-                        modifier = Modifier.fillMaxWidth(0.5f),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = if (isFollowing) {
-                            ButtonDefaults.outlinedButtonColors()
-                        } else {
-                            ButtonDefaults.buttonColors(
+                    if (isFollowing) {
+                        OutlinedButton(
+                            onClick = onFollowClick,
+                            modifier = Modifier.fillMaxWidth(0.5f),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text("已关注")
+                        }
+                    } else {
+                        Button(
+                            onClick = onFollowClick,
+                            modifier = Modifier.fillMaxWidth(0.5f),
+                            shape = MaterialTheme.shapes.medium,
+                            colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
+                        ) {
+                            Text("关注")
                         }
-                    ) {
-                        Text(if (isFollowing) "已关注" else "关注")
                     }
                 }
             }

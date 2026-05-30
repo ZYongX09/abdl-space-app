@@ -2,7 +2,6 @@ package top.abdl.space.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
 
 // ─── iOS 风格圆角规范（参考 BiliPai / Apple HIG）───

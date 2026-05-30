@@ -49,9 +49,17 @@ class ProfileViewModel(
                 val currentUserId = tokenManager.getUserId()
                 _uiState.value = _uiState.value.copy(
                     user = user,
-                    isLoading = false,
-                    isFollowing = false
+                    isLoading = false
                 )
+                // 检查关注状态
+                if (currentUserId > 0 && currentUserId != userId) {
+                    try {
+                        val followers = userApi.getFollowers(userId)
+                        _uiState.value = _uiState.value.copy(
+                            isFollowing = followers.users.any { it.id == currentUserId }
+                        )
+                    } catch (_: Exception) {}
+                }
             } catch (e: Exception) {
                 val message = ErrorHandler.getUserMessage(e)
                 _uiState.value = _uiState.value.copy(
