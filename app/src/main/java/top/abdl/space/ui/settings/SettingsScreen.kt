@@ -1,39 +1,28 @@
 package top.abdl.space.ui.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,21 +39,16 @@ fun SettingsScreen(
                 title = {
                     Text(
                         text = "设置",
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         }
     ) { padding ->
@@ -73,119 +57,46 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            SectionHeader(title = "外观")
+            Spacer(modifier = Modifier.height(8.dp))
 
-            SettingsItem(
-                icon = Icons.Default.Palette,
-                title = "跟随系统主题",
-                description = "自动切换浅色/深色模式",
-                trailing = {
-                    Switch(
-                        checked = uiState.useSystemTheme,
-                        onCheckedChange = { viewModel.toggleSystemTheme() },
-                        colors = SwitchDefaults.colors(
-                            checkedTrackColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                }
+            SectionLabel(title = "外观")
+
+            // Miuix SwitchPreference — 位置参数：checked, onCheckedChange, title
+            SwitchPreference(
+                checked = uiState.useSystemTheme,
+                onCheckedChange = { viewModel.toggleSystemTheme() },
+                title = "跟随系统主题"
             )
 
             if (!uiState.useSystemTheme) {
-                SettingsItem(
-                    icon = Icons.Default.DarkMode,
-                    title = "深色模式",
-                    description = "手动切换深色模式",
-                    trailing = {
-                        Switch(
-                            checked = uiState.isDarkMode,
-                            onCheckedChange = { viewModel.toggleDarkMode() },
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
+                SwitchPreference(
+                    checked = uiState.isDarkMode,
+                    onCheckedChange = { viewModel.toggleDarkMode() },
+                    title = "深色模式"
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SectionHeader(title = "关于")
+            SectionLabel(title = "关于")
 
-            SettingsItem(
-                icon = Icons.Default.Info,
+            // Miuix ArrowPreference — 位置参数：title, onClick
+            ArrowPreference(
                 title = "关于 ABDL Space",
-                description = "版本 1.0.0",
-                onClick = onNavigateToAbout,
-                showArrow = true
+                summary = "版本 1.0.0",
+                onClick = onNavigateToAbout
             )
         }
     }
 }
 
 @Composable
-private fun SectionHeader(title: String) {
+private fun SectionLabel(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
-}
-
-@Composable
-private fun SettingsItem(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    trailing: @Composable (() -> Unit)? = null,
-    onClick: (() -> Unit)? = null,
-    showArrow: Boolean = false
-) {
-    val modifier = if (onClick != null) {
-        Modifier.clickable(onClick = onClick)
-    } else {
-        Modifier
-    }
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        if (showArrow) {
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
-            trailing?.invoke()
-        }
-    }
 }

@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "top.abdl.space"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "top.abdl.space"
@@ -50,9 +50,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 
     buildFeatures {
@@ -116,6 +117,21 @@ dependencies {
 
     // Cloudflare Turnstile Android SDK
     // implementation("com.cloudflare:turnstile-android:1.3.0")
+
+    // Haze — 毛玻璃效果
+    implementation("dev.chrisbanes.haze:haze:1.7.2")
+    implementation("dev.chrisbanes.haze:haze-materials:1.7.2")
+
+    // Miuix — 小米风格组件（底栏、设置项、Switch 等）
+    implementation("top.yukonga.miuix.kmp:miuix-ui-android:0.9.1")
+    implementation("top.yukonga.miuix.kmp:miuix-preference-android:0.9.1")
+
+    // AndroidLiquidGlass — 液态玻璃效果
+    // TODO: 等 backdrop API 对齐后启用（需要更深入研究）
+    // implementation("io.github.kyant0:backdrop:2.0.0-alpha03")
+
+    // Shimmer — 骨架屏加载
+    implementation("com.valentinilk.shimmer:compose-shimmer:1.4.0")
 
     // Core KTX
     implementation("androidx.core:core-ktx:1.16.0")

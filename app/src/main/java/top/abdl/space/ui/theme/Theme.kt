@@ -15,7 +15,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.defaultTextStyles
+import top.yukonga.miuix.kmp.theme.lightColorScheme as miuixLight
+import top.yukonga.miuix.kmp.theme.darkColorScheme as miuixDark
 
+// ─── Material 3 色彩方案 ───
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryLight,
     onPrimary = OnPrimaryLight,
@@ -96,10 +101,22 @@ fun ABDLSpaceTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        shapes = AppShapes,
-        content = content
-    )
+    // Miuix 主题包裹 — 所有参数都有默认值，只需传 primary
+    val miuixColors = if (darkTheme) {
+        miuixDark(primary = colorScheme.primary)
+    } else {
+        miuixLight(primary = colorScheme.primary)
+    }
+
+    MiuixTheme(
+        colors = miuixColors,
+        textStyles = defaultTextStyles()
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            shapes = AppShapes,
+            content = content
+        )
+    }
 }
