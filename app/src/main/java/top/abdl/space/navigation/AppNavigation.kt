@@ -5,9 +5,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -33,6 +34,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.kyant.backdrop.backdrops.LayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -123,17 +130,39 @@ fun AppNavigation() {
         Screen.Profile.route
     )
 
+    // Haze 毛玻璃状态
     val hazeState = remember { HazeState() }
+    // AndroidLiquidGlass — 液态玻璃 backdrop
+    val contentBackdrop = rememberLayerBackdrop()
+    // 缓存颜色（避免在非 Composable lambda 中访问 MaterialTheme）
+    val surfaceGlassColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+    val barShape = remember { RoundedCornerShape(28.dp) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottomBar) {
                 Box(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-                    // Miuix NavigationBar — 毛玻璃悬浮药丸
+                    // Miuix NavigationBar + Haze 毛玻璃 + 液态玻璃
                     MiuixNavigationBar(
                         modifier = Modifier
-                            .hazeEffect(hazeState, HazeMaterials.ultraThin()),
+                            .hazeEffect(hazeState, HazeMaterials.ultraThin())
+                            .drawBackdrop(
+                                backdrop = contentBackdrop,
+                                shape = { barShape },
+                                effects = {
+                                    blur(20.dp.toPx())
+                                    lens(
+                                        refractionHeight = 4.dp.toPx(),
+                                        refractionAmount = 2.dp.toPx(),
+                                        depthEffect = true,
+                                        chromaticAberration = false
+                                    )
+                                },
+                                onDrawSurface = {
+                                    drawRect(surfaceGlassColor)
+                                }
+                            ),
                         color = Color.Transparent,
                         showDivider = false,
                         defaultWindowInsetsPadding = false,
@@ -178,7 +207,8 @@ fun AppNavigation() {
                 startDestination = Screen.Splash.route,
                 modifier = Modifier
                     .padding(padding)
-                    .hazeSource(hazeState),
+                    .hazeSource(hazeState)
+                    .layerBackdrop(contentBackdrop),
                 enterTransition = {
                     fadeIn(animationSpec = tween(250)) + slideIntoContainer(
                         towards = AnimatedContentTransitionScope.SlideDirection.Start,

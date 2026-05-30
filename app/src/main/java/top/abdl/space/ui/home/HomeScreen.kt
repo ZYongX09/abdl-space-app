@@ -68,6 +68,7 @@ import top.abdl.space.ui.auth.AuthViewModel
 import top.abdl.space.ui.components.EmptyState
 import top.abdl.space.ui.components.ErrorView
 import top.abdl.space.ui.components.ImageGrid
+import top.abdl.space.ui.components.PostShimmerList
 import top.abdl.space.ui.components.StaggerItem
 import top.abdl.space.ui.forum.ForumViewModel
 import top.abdl.space.util.DateUtils
@@ -164,14 +165,7 @@ fun HomeScreen(
         ) {
             when {
                 uiState.isLoading && uiState.posts.isEmpty() -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    PostShimmerList(count = 5)
                 }
                 uiState.error != null && uiState.posts.isEmpty() -> {
                     ErrorView(

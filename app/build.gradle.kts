@@ -127,8 +127,7 @@ dependencies {
     implementation("top.yukonga.miuix.kmp:miuix-preference-android:0.9.1")
 
     // AndroidLiquidGlass — 液态玻璃效果
-    // TODO: 等 backdrop API 对齐后启用（需要更深入研究）
-    // implementation("io.github.kyant0:backdrop:2.0.0-alpha03")
+    implementation("io.github.kyant0:backdrop:2.0.0-alpha03")
 
     // Shimmer — 骨架屏加载
     implementation("com.valentinilk.shimmer:compose-shimmer:1.4.0")
