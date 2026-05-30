@@ -218,8 +218,9 @@ fun AppNavigation() {
                 }
 
             MiuixNavigationBar(
-                modifier = barModifier
+                modifier = Modifier
                     .clip(barShape)
+                    .then(barModifier)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)),
                 color = Color.Transparent,
                 showDivider = false,

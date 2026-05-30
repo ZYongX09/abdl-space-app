@@ -27,7 +27,7 @@ class SettingsViewModel(private val appContext: Context) : ViewModel() {
     init {
         viewModelScope.launch {
             settingsManager.useSystemTheme.collect { v ->
-                _uiState.value = _uiState.value.copy(useSystemTheme = v, cacheSize = settingsManager.getCacheSize(appContext))
+                _uiState.value = _uiState.value.copy(useSystemTheme = v, cacheSize = settingsManager.getCacheSize())
             }
         }
         viewModelScope.launch {
@@ -65,7 +65,7 @@ class SettingsViewModel(private val appContext: Context) : ViewModel() {
     fun setAnimationLevel(level: Int) = viewModelScope.launch { settingsManager.setAnimationLevel(level) }
 
     fun clearCache() = viewModelScope.launch {
-        settingsManager.clearCache(appContext)
+        settingsManager.clearCache()
         _uiState.value = _uiState.value.copy(cacheSize = "0 B")
     }
 }
