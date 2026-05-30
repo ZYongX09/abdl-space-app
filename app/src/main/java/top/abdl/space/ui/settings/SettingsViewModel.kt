@@ -1,11 +1,6 @@
 package top.abdl.space.ui.settings
 
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,52 +8,64 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
-
 data class SettingsUiState(
     val isDarkMode: Boolean = false,
-    val useSystemTheme: Boolean = true
+    val useSystemTheme: Boolean = true,
+    val isAmoledDark: Boolean = false,
+    val themeColorIndex: Int = 0,
+    val blurEnabled: Boolean = true,
+    val animationLevel: Int = 1,
+    val cacheSize: String = "计算中..."
 )
 
-class SettingsViewModel(
-    private val context: Context
-) : ViewModel() {
+class SettingsViewModel(private val appContext: Context) : ViewModel() {
+
+    private val settingsManager = AppSettingsManager(appContext)
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    private val darkModeKey = booleanPreferencesKey("dark_mode")
-    private val systemThemeKey = booleanPreferencesKey("system_theme")
-
     init {
-        loadSettings()
-    }
-
-    private fun loadSettings() {
         viewModelScope.launch {
-            context.dataStore.data.collect { preferences ->
-                val isDarkMode = preferences[darkModeKey] ?: false
-                val useSystemTheme = preferences[systemThemeKey] ?: true
-                _uiState.value = SettingsUiState(
-                    isDarkMode = isDarkMode,
-                    useSystemTheme = useSystemTheme
-                )
+            settingsManager.useSystemTheme.collect { v ->
+                _uiState.value = _uiState.value.copy(useSystemTheme = v, cacheSize = settingsManager.getCacheSize(appContext))
+            }
+        }
+        viewModelScope.launch {
+            settingsManager.isDarkMode.collect { v ->
+                _uiState.value = _uiState.value.copy(isDarkMode = v)
+            }
+        }
+        viewModelScope.launch {
+            settingsManager.isAmoledDark.collect { v ->
+                _uiState.value = _uiState.value.copy(isAmoledDark = v)
+            }
+        }
+        viewModelScope.launch {
+            settingsManager.themeColorIndex.collect { v ->
+                _uiState.value = _uiState.value.copy(themeColorIndex = v)
+            }
+        }
+        viewModelScope.launch {
+            settingsManager.blurEnabled.collect { v ->
+                _uiState.value = _uiState.value.copy(blurEnabled = v)
+            }
+        }
+        viewModelScope.launch {
+            settingsManager.animationLevel.collect { v ->
+                _uiState.value = _uiState.value.copy(animationLevel = v)
             }
         }
     }
 
-    fun toggleDarkMode() {
-        viewModelScope.launch {
-            context.dataStore.edit { preferences ->
-                preferences[darkModeKey] = !(_uiState.value.isDarkMode)
-            }
-        }
-    }
+    fun toggleSystemTheme() = viewModelScope.launch { settingsManager.toggleSystemTheme() }
+    fun toggleDarkMode() = viewModelScope.launch { settingsManager.toggleDarkMode() }
+    fun toggleAmoledDark() = viewModelScope.launch { settingsManager.toggleAmoledDark() }
+    fun setThemeColorIndex(index: Int) = viewModelScope.launch { settingsManager.setThemeColorIndex(index) }
+    fun toggleBlur() = viewModelScope.launch { settingsManager.toggleBlur() }
+    fun setAnimationLevel(level: Int) = viewModelScope.launch { settingsManager.setAnimationLevel(level) }
 
-    fun toggleSystemTheme() {
-        viewModelScope.launch {
-            context.dataStore.edit { preferences ->
-                preferences[systemThemeKey] = !(_uiState.value.useSystemTheme)
-            }
-        }
+    fun clearCache() = viewModelScope.launch {
+        settingsManager.clearCache(appContext)
+        _uiState.value = _uiState.value.copy(cacheSize = "0 B")
     }
 }

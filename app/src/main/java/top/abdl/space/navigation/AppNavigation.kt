@@ -67,6 +67,8 @@ import top.abdl.space.ui.profile.ProfileViewModel
 import top.abdl.space.ui.search.SearchScreen
 import top.abdl.space.ui.search.SearchViewModel
 import top.abdl.space.ui.settings.AboutScreen
+import top.abdl.space.ui.settings.AppearanceSettingsScreen
+import top.abdl.space.ui.settings.OpenSourceLicensesScreen
 import top.abdl.space.ui.settings.SettingsScreen
 import top.abdl.space.ui.settings.SettingsViewModel
 import top.yukonga.miuix.kmp.basic.NavigationBar as MiuixNavigationBar
@@ -106,6 +108,8 @@ sealed class Screen(val route: String) {
     }
     data object EditProfile : Screen("edit_profile")
     data object Settings : Screen("settings")
+    data object AppearanceSettings : Screen("appearance_settings")
+    data object OpenSourceLicenses : Screen("open_source_licenses")
     data object About : Screen("about")
 }
 
@@ -362,7 +366,17 @@ fun AppNavigation() {
                     EditProfileScreen(koinViewModel(), { navController.popBackStack() }, { navController.popBackStack() })
                 }
                 composable(Screen.Settings.route) {
-                    SettingsScreen(koinViewModel(), { navController.popBackStack() }, { navController.navigate(Screen.About.route) })
+                    SettingsScreen(koinViewModel(), { navController.popBackStack() },
+                        { navController.navigate(Screen.AppearanceSettings.route) },
+                        { navController.navigate(Screen.OpenSourceLicenses.route) },
+                        { navController.navigate(Screen.About.route) }
+                    )
+                }
+                composable(Screen.AppearanceSettings.route) {
+                    AppearanceSettingsScreen(koinViewModel(), { navController.popBackStack() })
+                }
+                composable(Screen.OpenSourceLicenses.route) {
+                    OpenSourceLicensesScreen { navController.popBackStack() }
                 }
                 composable(Screen.About.route) {
                     AboutScreen { navController.popBackStack() }
